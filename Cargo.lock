@@ -13,6 +13,7 @@ name = "advent-of-code-friend"
 version = "0.1.0"
 dependencies = [
  "dotenv",
+ "serde",
  "serenity",
  "strum",
  "tokio",

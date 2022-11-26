@@ -3,11 +3,7 @@ mod commands;
 use dotenv::dotenv;
 use serenity::{
     async_trait,
-    model::{
-        gateway::Ready,
-        id::GuildId,
-        prelude::interaction::{Interaction, InteractionResponseType},
-    },
+    model::{gateway::Ready, id::GuildId, prelude::interaction::Interaction},
     prelude::*,
     Client,
 };
@@ -42,8 +38,8 @@ impl EventHandler for Handler {
         // Setup guild commands
         GuildId::set_application_commands(&guild_id, &ctx.http, |commmands| {
             commmands
-                .create_application_command(|command| commands::leaderboard::register(command))
-                .create_application_command(|command| commands::puzzle::register(command))
+                .create_application_command(commands::leaderboard::register)
+                .create_application_command(commands::puzzle::register)
         })
         .await
         .expect("to have created guild commands");
