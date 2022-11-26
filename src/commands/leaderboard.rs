@@ -1,3 +1,4 @@
+use advent_of_code_friend::LeaderboardOrdering;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::prelude::Context;
@@ -5,14 +6,6 @@ use serenity::{
     builder::CreateApplicationCommand,
     model::prelude::interaction::application_command::CommandDataOptionValue,
 };
-use strum::{Display, EnumString};
-
-#[derive(Debug, PartialEq, PartialOrd, EnumString, Display)]
-enum LeaderboardOrdering {
-    LocalScore,
-    GlobalScore,
-    Stars,
-}
 
 pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
     // Parse options

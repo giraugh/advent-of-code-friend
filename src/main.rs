@@ -17,6 +17,7 @@ impl EventHandler for Handler {
         // If this interaction is a command
         if let Interaction::ApplicationCommand(command) = interaction {
             match command.data.name.as_str() {
+                "register" => commands::register::run(&ctx, &command).await,
                 "leaderboard" => commands::leaderboard::run(&ctx, &command).await,
                 "puzzle" => commands::puzzle::run(&ctx, &command).await,
                 _ => {}
@@ -38,6 +39,7 @@ impl EventHandler for Handler {
         // Setup guild commands
         GuildId::set_application_commands(&guild_id, &ctx.http, |commmands| {
             commmands
+                .create_application_command(commands::register::register)
                 .create_application_command(commands::leaderboard::register)
                 .create_application_command(commands::puzzle::register)
         })
