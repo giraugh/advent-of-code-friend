@@ -1,16 +1,46 @@
-use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::prelude::Context;
+use serenity::{
+    builder::CreateApplicationCommand,
+    model::prelude::interaction::application_command::CommandDataOption,
+};
+
+use super::{extract_int_option, CommandOptions};
+
+struct PuzzleCommandOptions {
+    day: Option<usize>,
+    year: Option<usize>,
+}
+
+// TODO: To think about: should these options do the defaulting to the current day/year? or should that happen in run()?
+
+impl CommandOptions for PuzzleCommandOptions {
+    fn from_options_list(options_list: &[CommandDataOption]) -> Self {
+        Self {
+            day: extract_int_option(options_list, "day").map(|v| v as usize),
+            year: extract_int_option(options_list, "year").map(|v| v as usize),
+        }
+    }
+}
+// Command //
 
 pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
+    // Parse options
+    let options = PuzzleCommandOptions::from_options_list(&command.data.options);
+
+    // Respond
     command
         .create_interaction_response(&ctx.http, |response| {
-            response
-                .interaction_response_data(|message| message.content("pretend this is a puzzle"))
+            response.interaction_response_data(|message| {
+                message.content(format!(
+                    "pretend this is a puzzle. Day={:?} Year={:?}",
+                    options.day, options.year,
+                ))
+            })
         })
         .await
-        .expect("to respond to command");
+        .expect("failed to create interaction response");
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {

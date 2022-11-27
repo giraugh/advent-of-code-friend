@@ -1,25 +1,34 @@
 use advent_of_code_friend::LeaderboardOrdering;
+use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
-use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
-use serenity::prelude::Context;
-use serenity::{
-    builder::CreateApplicationCommand,
-    model::prelude::interaction::application_command::CommandDataOptionValue,
+use serenity::model::prelude::interaction::application_command::{
+    ApplicationCommandInteraction, CommandDataOption,
 };
+use serenity::prelude::Context;
 
-pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
-    // Parse options
-    let mut ordering: LeaderboardOrdering = LeaderboardOrdering::LocalScore;
-    for option in &command.data.options {
-        match option.name.as_str() {
-            "ordering" => {
-                if let Some(CommandDataOptionValue::String(value)) = &option.resolved {
-                    ordering = value.parse().unwrap()
-                }
-            }
-            name => panic!("Unknown option {:?}", name),
+use super::{extract_string_option, CommandOptions};
+
+// Options //
+
+struct LeaderboardCommandOptions {
+    ordering: LeaderboardOrdering,
+}
+
+impl CommandOptions for LeaderboardCommandOptions {
+    fn from_options_list(options_list: &[CommandDataOption]) -> Self {
+        Self {
+            ordering: extract_string_option(options_list, "ordering")
+                .and_then(|ordering| ordering.parse().ok())
+                .unwrap_or(LeaderboardOrdering::GlobalScore),
         }
     }
+}
+
+// Command //
+
+pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
+    // Parse command options
+    let options = LeaderboardCommandOptions::from_options_list(&command.data.options);
 
     // Respond
     command
@@ -27,12 +36,12 @@ pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
             response.interaction_response_data(|message| {
                 message.content(format!(
                     "imagine this is a leaderboard. ordering: {:?}",
-                    ordering
+                    options.ordering
                 ))
             })
         })
         .await
-        .expect("to respond to command");
+        .expect("failed to create interaction response");
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
