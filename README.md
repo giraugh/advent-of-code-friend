@@ -49,5 +49,5 @@ If you find any issues with the bot, or you have a cool feature request, you can
 AOC Friend is written in [Rust](https://doc.rust-lang.org/book/ch01-01-installation.html), you can use Cargo to build and run the bot.
 If you're looking for something to contribute to, consider checking out issues tagged with [good first issue](https://github.com/giraugh/advent-of-code-friend/labels/good%20first%20issue).
 
-Make sure you create a `.env` file with your Discord bot token and run `cargo watch` to start the bot in watch mode (it will restart the bot when you edit files).
+Make sure you create a `.env` file with your Discord bot token and run `cargo run` to start the bot. (or use `cargo watch -x run` if you have [cargo-watch](https://crates.io/crates/cargo-watch) installed to restart when files change)
 You can then compile an executable with `cargo build`.
