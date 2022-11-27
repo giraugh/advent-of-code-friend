@@ -1,6 +1,7 @@
 mod aoc;
 mod bot;
 
+use aoc::get_leaderboard;
 use bot::Bot;
 use dotenv::dotenv;
 use std::env;
@@ -15,8 +16,6 @@ async fn main() {
 
     // Start discord bot as tokio task
     let bot_thread = tokio::spawn(Bot::start(token));
-
-    // TODO: Poll AOC
 
     // Wait for bot
     bot_thread.await.unwrap();
