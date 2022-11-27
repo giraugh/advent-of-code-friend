@@ -1,4 +1,5 @@
-use advent_of_code_friend::LeaderboardOrdering;
+use crate::bot::config::LeaderboardOrdering;
+
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::{

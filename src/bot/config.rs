@@ -10,7 +10,7 @@ use strum::{Display, EnumString};
 
 const CONFIG_FILE: &str = "config.json";
 
-#[derive(Debug, PartialEq, PartialOrd, EnumString, Display, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, EnumString, Display, Serialize, Deserialize)]
 pub enum LeaderboardOrdering {
     LocalScore,
     GlobalScore,

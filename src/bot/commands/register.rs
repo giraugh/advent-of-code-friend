@@ -1,4 +1,4 @@
-use advent_of_code_friend::{Config, GuildConfig};
+use crate::bot::config::{Config, GuildConfig};
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::{
