@@ -1,6 +1,6 @@
 use crate::bot::Bot;
 use crate::config::LeaderboardOrdering;
-use crate::format::make_leaderboard_embed;
+use crate::format::{make_leaderboard_embed, make_message_embed, ResponseReason};
 
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
@@ -58,7 +58,13 @@ pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteracti
         Err(error) => {
             command
                 .create_followup_message(&ctx.http, |message| {
-                    message.content(format!("Failed to get leaderboard: {}", error))
+                    message.embed(|e| {
+                        make_message_embed(
+                            e,
+                            ResponseReason::Error,
+                            &format!("Failed to get leaderboard: {}", error),
+                        )
+                    })
                 })
                 .await
                 .expect("failed to send error response");

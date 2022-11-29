@@ -7,6 +7,8 @@ use crate::{
     config::LeaderboardOrdering,
 };
 
+const EMBED_COLOR: i32 = 0xFFFE60;
+
 macro_rules! trunc {
     ($s:expr, $n: expr) => {{
         let mut s = $s.clone();
@@ -35,6 +37,7 @@ pub fn make_leaderboard_embed(
             &leaderboard.leaderboard.event,
             &leaderboard.leaderboard_id,
         ))
+        .color(EMBED_COLOR)
 }
 
 pub fn leaderboard_embed_content(
@@ -71,7 +74,7 @@ pub fn leaderboard_embed_content(
         .enumerate()
         .map(|(i, member)| {
             format!(
-                "{}: {} {} ⭐️\n",
+                "{}: {}  {} ⭐️\n",
                 format_args!(
                     "{:0>width$}",
                     i + 1,
@@ -109,6 +112,29 @@ pub fn make_puzzle_embed(
         )) // TODO: Scrape name of puzzle from the page
         .description(&puzzle_url)
         .url(&puzzle_url)
+        .color(EMBED_COLOR)
+}
+
+pub enum ResponseReason {
+    Success,
+    Error,
+}
+
+pub fn make_message_embed<'a>(
+    create_embed: &'a mut CreateEmbed,
+    reason: ResponseReason,
+    message: &str,
+) -> &'a mut CreateEmbed {
+    create_embed
+        .title(match reason {
+            ResponseReason::Success => "✅  Success",
+            ResponseReason::Error => "❌  Error",
+        })
+        .color(match reason {
+            ResponseReason::Success => 0x77B256,
+            ResponseReason::Error => 0xDD2D44,
+        })
+        .description(message)
 }
 
 pub fn generate_leaderboard_url(year: &str, id: &str) -> String {

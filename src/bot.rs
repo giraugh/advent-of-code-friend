@@ -40,7 +40,7 @@ impl Bot {
         let guild_config = config
             .guild_configs
             .get(&guild_id)
-            .ok_or_else(|| "Guild has no registered leaderboard".to_owned())?;
+            .ok_or_else(|| "guild has no registered leaderboard".to_owned())?;
 
         // Get leaderboard
         let leaderboard = {
@@ -64,6 +64,7 @@ impl EventHandler for Bot {
         if let Interaction::ApplicationCommand(command) = interaction {
             match command.data.name.as_str() {
                 "register" => commands::register::run(self, &ctx, &command).await,
+                "unregister" => commands::unregister::run(self, &ctx, &command).await,
                 "leaderboard" => commands::leaderboard::run(self, &ctx, &command).await,
                 "puzzle" => commands::puzzle::run(self, &ctx, &command).await,
                 _ => {}
@@ -89,6 +90,7 @@ impl EventHandler for Bot {
         GuildId::set_application_commands(&guild_id, &ctx.http, |commmands| {
             commmands
                 .create_application_command(commands::register::register)
+                .create_application_command(commands::unregister::register)
                 .create_application_command(commands::leaderboard::register)
                 .create_application_command(commands::puzzle::register)
         })

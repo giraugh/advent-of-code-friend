@@ -5,6 +5,7 @@ use serenity::model::prelude::interaction::application_command::{
 pub mod leaderboard;
 pub mod puzzle;
 pub mod register;
+pub mod unregister;
 
 fn extract_string_option(options_list: &[CommandDataOption], option_name: &str) -> Option<String> {
     let option = options_list.iter().find(|opt| opt.name == option_name)?;

@@ -1,5 +1,6 @@
 use crate::bot::Bot;
 use crate::config::{Config, GuildConfig};
+use crate::format::{make_message_embed, ResponseReason};
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::{
@@ -30,6 +31,7 @@ pub async fn run(_bot: &Bot, ctx: &Context, command: &ApplicationCommandInteract
     let options = RegisterCommandOptions::from_options_list(&command.data.options);
 
     // Save data
+    // TODO: Try fetching leaderboard and fail if it doesn't exist
     let mut config = Config::get().expect("Failed to load config");
     config.guild_configs.insert(
         command.guild_id.expect("Expected guild ID"),
@@ -43,9 +45,13 @@ pub async fn run(_bot: &Bot, ctx: &Context, command: &ApplicationCommandInteract
     command
         .create_interaction_response(&ctx.http, |response| {
             response.interaction_response_data(|message| {
-                message
-                    .content("registered a leaderboard for this server :+1:")
-                    .ephemeral(true)
+                message.ephemeral(true).embed(|e| {
+                    make_message_embed(
+                        e,
+                        ResponseReason::Success,
+                        "Successfully registered your leaderboard to this server. You can now set up daily announcements and run `/leaderboard`.\n\nRun this command again to change the registration details, or use `/unregister` to remove this registration.",
+                    )
+                })
             })
         })
         .await

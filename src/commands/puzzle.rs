@@ -8,7 +8,7 @@ use serenity::{
 };
 
 use crate::bot::Bot;
-use crate::format::make_puzzle_embed;
+use crate::format::{make_message_embed, make_puzzle_embed, ResponseReason};
 
 use super::{extract_int_option, CommandOptions};
 
@@ -40,18 +40,32 @@ pub async fn run(_bot: &Bot, ctx: &Context, command: &ApplicationCommandInteract
         .create_interaction_response(&ctx.http, |response| {
             response.interaction_response_data(|message| {
                 if Utc::now().month() != 12 && options.year == Utc::now().year() {
-                    message.ephemeral(true).content(format!(
-                        "It's not yet December, please specify a year between 2015 and {}",
-                        Utc::now().year() - 1,
-                    ))
-                } else if options.day.is_none() && options.year != Utc::now().year() {
-                    message
-                        .ephemeral(true)
-                        .content("When using a previous year, you must also specify a day")
+                    message.ephemeral(true).embed(|e| {
+                        make_message_embed(
+                            e,
+                            ResponseReason::Error,
+                            &format!(
+                                "It's not yet December, please specify a year between 2015 and {}",
+                                Utc::now().year() - 1,
+                            ),
+                        )
+                    })
                 } else if options.year > Utc::now().year() {
-                    message
-                        .ephemeral(true)
-                        .content("You can't use a year in the future 🗞️")
+                    message.ephemeral(true).embed(|e| {
+                        make_message_embed(
+                            e,
+                            ResponseReason::Error,
+                            "You can't use a year in the future 🗞️",
+                        )
+                    })
+                } else if options.day.is_none() && options.year != Utc::now().year() {
+                    message.ephemeral(true).embed(|e| {
+                        make_message_embed(
+                            e,
+                            ResponseReason::Error,
+                            "When using a previous year, you must also specify a day",
+                        )
+                    })
                 } else {
                     message.embed(|e| {
                         make_puzzle_embed(
