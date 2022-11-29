@@ -6,6 +6,8 @@ use serenity::{
     model::prelude::interaction::application_command::CommandDataOption,
 };
 
+use crate::bot::Bot;
+
 use super::{extract_int_option, CommandOptions};
 
 struct PuzzleCommandOptions {
@@ -25,7 +27,7 @@ impl CommandOptions for PuzzleCommandOptions {
 }
 // Command //
 
-pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
+pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteraction) {
     // Parse options
     let options = PuzzleCommandOptions::from_options_list(&command.data.options);
 
