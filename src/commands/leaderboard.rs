@@ -80,7 +80,7 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
             option
                 .name("ordering")
                 .description(
-                    "Method used to order people in the leaderboard (default is local-score)",
+                    "Method used to order people in the leaderboard (default: local-score)",
                 )
                 .kind(CommandOptionType::String)
                 .add_string_choice("local-score", LeaderboardOrdering::LocalScore)
