@@ -1,8 +1,3 @@
-mod commands;
-mod config;
-
-use chrono::{Datelike, Utc};
-
 use serenity::{
     async_trait,
     model::{gateway::Ready, id::GuildId, prelude::interaction::Interaction},
@@ -10,9 +5,11 @@ use serenity::{
 };
 use std::{env, sync::Arc};
 
-use crate::aoc::{AOCData, LeaderboardCacheEntry};
-
-use self::config::Config;
+use crate::{
+    aoc::{AOCData, LeaderboardCacheEntry},
+    commands,
+    config::Config,
+};
 
 pub struct Bot {
     pub aoc_data: Mutex<AOCData>,

@@ -1,5 +1,8 @@
 mod aoc;
 mod bot;
+mod commands;
+mod config;
+mod format;
 
 use bot::Bot;
 use dotenv::dotenv;

@@ -1,5 +1,5 @@
-use crate::bot::config::{Config, GuildConfig};
 use crate::bot::Bot;
+use crate::config::{Config, GuildConfig};
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::{
