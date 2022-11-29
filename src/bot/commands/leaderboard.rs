@@ -1,4 +1,5 @@
 use crate::bot::config::LeaderboardOrdering;
+use crate::bot::Bot;
 
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
@@ -27,18 +28,26 @@ impl CommandOptions for LeaderboardCommandOptions {
 
 // Command //
 
-pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
+pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteraction) {
     // Parse command options
     let options = LeaderboardCommandOptions::from_options_list(&command.data.options);
+
+    // Get leaderboard
+    let leaderboard = bot
+        .get_registered_leaderboard(
+            command
+                .guild_id
+                .expect("Command to have associated guild id"),
+        )
+        .await;
+
+    // TODO: format leaderboard properly
 
     // Respond
     command
         .create_interaction_response(&ctx.http, |response| {
             response.interaction_response_data(|message| {
-                message.content(format!(
-                    "imagine this is a leaderboard. ordering: {:?}",
-                    options.ordering
-                ))
+                message.content(format!("leaderboard: {:?}", leaderboard))
             })
         })
         .await

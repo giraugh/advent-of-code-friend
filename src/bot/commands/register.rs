@@ -1,4 +1,5 @@
 use crate::bot::config::{Config, GuildConfig};
+use crate::bot::Bot;
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::{
@@ -18,13 +19,13 @@ impl CommandOptions for RegisterCommandOptions {
         Self {
             session_token: extract_string_option(options_list, "session_token")
                 .expect("Didn't find session token"),
-            leaderboard_id: extract_string_option(options_list, "session_token")
+            leaderboard_id: extract_string_option(options_list, "leaderboard_id")
                 .expect("Didn't find leaderboard id"),
         }
     }
 }
 
-pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction) {
+pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteraction) {
     // Parse options
     let options = RegisterCommandOptions::from_options_list(&command.data.options);
 

@@ -1,11 +1,71 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc, sync::Arc, time::Instant};
 
+use reqwest::{Client, StatusCode};
 use serde::Deserialize;
 
-static cache: Option<Box<CacheData>> = None;
+pub struct AOCData {
+    leaderboards: HashMap<LeaderboardCacheKey, Arc<LeaderboardCacheEntry>>,
+    http_client: Client,
+}
 
-struct CacheData {
-    pub leaderboards: Vec<Leaderboard>,
+#[derive(PartialEq, Eq, Hash, Clone)]
+struct LeaderboardCacheKey(String, String);
+impl LeaderboardCacheKey {
+    pub fn new(event_id: &str, leaderboard_id: &str) -> Self {
+        Self(event_id.to_owned(), leaderboard_id.to_owned())
+    }
+}
+
+#[derive(Debug)]
+pub struct LeaderboardCacheEntry {
+    pub leaderboard: Leaderboard,
+    created_at: std::time::Instant,
+}
+
+impl LeaderboardCacheEntry {
+    pub fn is_expired(&self) -> bool {
+        Instant::now().duration_since(self.created_at).as_secs() > 900
+    }
+}
+
+impl From<Leaderboard> for Arc<LeaderboardCacheEntry> {
+    fn from(leaderboard: Leaderboard) -> Self {
+        Arc::new(LeaderboardCacheEntry {
+            leaderboard,
+            created_at: Instant::now(),
+        })
+    }
+}
+
+impl AOCData {
+    pub fn new() -> Self {
+        Self {
+            http_client: reqwest::Client::new(),
+            leaderboards: HashMap::new(),
+        }
+    }
+
+    pub async fn get_leaderboard(
+        &mut self,
+        event_id: &str,
+        leaderboard_id: &str,
+        session_token: &str,
+    ) -> Result<Arc<LeaderboardCacheEntry>, reqwest::Error> {
+        let key = LeaderboardCacheKey::new(event_id, leaderboard_id);
+        match self.leaderboards.get(&key) {
+            // If we have an unexpired cache entry, return it
+            Some(entry) if !entry.is_expired() => Ok(entry.clone()),
+
+            // Otherwise, fetch and then cache it
+            _ => fetch_leaderboard(&self.http_client, event_id, leaderboard_id, session_token)
+                .await
+                .map(|leaderboard| {
+                    let entry: Arc<LeaderboardCacheEntry> = leaderboard.into();
+                    self.leaderboards.insert(key, entry.clone());
+                    entry
+                }),
+        }
+    }
 }
 
 #[derive(Deserialize, Debug)]
@@ -65,33 +125,14 @@ async fn fetch_leaderboard(
         .send()
         .await?;
 
+    // TODO: stuff
+    // if res.status() == StatusCode::NOT_FOUND {
+    //     return Err("No such leaderboard found");
+    // }
+
     // Parse
     let leaderboard = res.json().await?;
 
     // Return result
     Ok(leaderboard)
-}
-
-async fn get_cached_leaderboard(event_id: &str, leaderboard_id: &str) -> Option<Leaderboard> {
-    // TODO
-    None
-}
-
-pub async fn get_leaderboard(
-    client: &reqwest::Client,
-    event_id: &str,
-    leaderboard_id: &str,
-    session_token: &str,
-) -> Option<Leaderboard> {
-    // Attempt to get leaderboard from cache
-
-    // Fetch the leaderboard
-    let leaderboard = fetch_leaderboard(client, event_id, leaderboard_id, session_token)
-        .await
-        .ok();
-
-    // Cache the result
-
-    // Return leaderboard
-    leaderboard
 }

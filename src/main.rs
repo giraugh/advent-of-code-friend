@@ -1,7 +1,6 @@
 mod aoc;
 mod bot;
 
-use aoc::get_leaderboard;
 use bot::Bot;
 use dotenv::dotenv;
 use std::env;
