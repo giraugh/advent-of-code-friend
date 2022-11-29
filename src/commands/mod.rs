@@ -38,9 +38,9 @@ fn extract_channel_option(
 }
 
 fn extract_subcommand(options_list: &[CommandDataOption]) -> Option<&CommandDataOption> {
-    let option = options_list
-        .iter()
-        .find(|opt| opt.kind == CommandOptionType::SubCommand)?;
+    let option = options_list.iter().find(|opt| {
+        opt.kind == CommandOptionType::SubCommand || opt.kind == CommandOptionType::SubCommandGroup
+    })?;
     Some(option)
 }
 

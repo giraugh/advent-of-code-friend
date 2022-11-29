@@ -11,11 +11,11 @@ use serenity::prelude::Context;
 
 use super::super::super::{extract_channel_option, CommandOptions};
 
-struct DailyUnregisterLeaderboardCommandOptions {
+struct DailyUnregisterPuzzleCommandOptions {
     channel: PartialChannel,
 }
 
-impl CommandOptions for DailyUnregisterLeaderboardCommandOptions {
+impl CommandOptions for DailyUnregisterPuzzleCommandOptions {
     fn from_options_list(options_list: &[CommandDataOption]) -> Self {
         Self {
             channel: extract_channel_option(options_list, "channel").expect("Didn't find channel"),
@@ -30,22 +30,22 @@ pub async fn run(
     command: &CommandDataOption,
 ) {
     // Parse options
-    let options = DailyUnregisterLeaderboardCommandOptions::from_options_list(&command.options);
+    let options = DailyUnregisterPuzzleCommandOptions::from_options_list(&command.options);
 
     // Save data
     let mut config = Config::get().expect("Failed to load config");
-    let removed_channel_config = config.daily_leaderboard_configs.remove(&options.channel.id);
+    let removed_puzzle_config = config.daily_puzzle_configs.remove(&options.channel.id);
 
     // Respond
     interaction
         .create_interaction_response(&ctx.http, |response| {
             response.interaction_response_data(|message| {
-                if removed_channel_config.is_some() {
+                if removed_puzzle_config.is_some() {
                     message.ephemeral(true).embed(|e| {
                         make_message_embed(
                             e,
                             ResponseReason::Success,
-                            &format!("Successfully removed the daily leaderboard from <#{}>", options.channel.id),
+                            &format!("Successfully removed the daily puzzle from <#{}>", options.channel.id),
                         )
                     })
                 } else {
@@ -53,7 +53,7 @@ pub async fn run(
                         make_message_embed(
                             e,
                             ResponseReason::Error,
-                            "There was no daily leaderboard on that channel. You can set one up with `/daily leaderboard`.",
+                            "There was no daily puzzle on that channel. You can set one up with `/daily puzzle`.",
                         )
                     })
                 }
@@ -65,8 +65,8 @@ pub async fn run(
 
 pub fn register() -> CreateApplicationCommandOption {
     CreateApplicationCommandOption::default()
-        .name("leaderboard")
-        .description("Remove a daily leaderboard update in a specific channel")
+        .name("puzzle")
+        .description("Remove a daily puzzle update in a specific channel")
         .kind(CommandOptionType::SubCommand)
         .create_sub_option(|option| {
             option

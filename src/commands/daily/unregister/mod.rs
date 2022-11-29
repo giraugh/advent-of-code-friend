@@ -12,6 +12,7 @@ use crate::bot::Bot;
 use super::super::extract_subcommand;
 
 pub mod leaderboard;
+pub mod puzzle;
 
 pub async fn run(
     bot: &Bot,
@@ -22,7 +23,7 @@ pub async fn run(
     match extract_subcommand(&command.options) {
         Some(subcommand) => match subcommand.name.as_str() {
             "leaderboard" => leaderboard::run(bot, ctx, interaction, subcommand).await,
-            //"puzzle" => puzzle::run(bot, ctx, interaction, subcommand).await,
+            "puzzle" => puzzle::run(bot, ctx, interaction, subcommand).await,
             _ => panic!("Unknown subcommand"),
         },
         None => panic!("Command group called without subcommand"),
@@ -35,6 +36,6 @@ pub fn register() -> CreateApplicationCommandOption {
         .description("Remove a daily update from a specific channel")
         .kind(CommandOptionType::SubCommandGroup)
         .add_sub_option(leaderboard::register())
-        //.add_sub_option(puzzle::register())
+        .add_sub_option(puzzle::register())
         .to_owned()
 }
