@@ -72,7 +72,10 @@ impl EventHandler for Bot {
     }
 
     async fn ready(&self, ctx: Context, ready: Ready) {
-        println!("Bot is connected as {}", ready.user.name);
+        println!(
+            "Bot is connected as {}#{}",
+            ready.user.name, ready.user.discriminator
+        );
 
         // For now, we will register local commands, to do so get the guild id
         let guild_id = GuildId(

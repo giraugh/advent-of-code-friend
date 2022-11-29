@@ -31,9 +31,9 @@ pub fn make_leaderboard_embed(
             ordering,
         ))
         .timestamp(leaderboard.created_at.to_rfc3339())
-        .url(format!(
-            "https://adventofcode.com/{}/leaderboard/private/view/{}",
-            leaderboard.leaderboard.event, leaderboard.leaderboard_id
+        .url(generate_leaderboard_url(
+            &leaderboard.leaderboard.event,
+            &leaderboard.leaderboard_id,
         ))
 }
 
@@ -92,4 +92,32 @@ pub fn leaderboard_embed_content(
         .collect();
 
     format!("```js\n{}```", content)
+}
+
+pub fn make_puzzle_embed(
+    create_embed: &mut CreateEmbed,
+    year: i32,
+    day: u32,
+    new: bool,
+) -> &mut CreateEmbed {
+    let puzzle_url = generate_puzzle_url(year, day);
+
+    create_embed
+        .title(format!(
+            "{}Day {day}, {year}",
+            if new { "New Puzzle: " } else { "" }
+        )) // TODO: Scrape name of puzzle from the page
+        .description(&puzzle_url)
+        .url(&puzzle_url)
+}
+
+pub fn generate_leaderboard_url(year: &str, id: &str) -> String {
+    format!(
+        "https://adventofcode.com/{}/leaderboard/private/view/{}",
+        year, id
+    )
+}
+
+pub fn generate_puzzle_url(year: i32, day: u32) -> String {
+    format!("https://adventofcode.com/{}/day/{}", year, day)
 }

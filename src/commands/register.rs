@@ -25,7 +25,7 @@ impl CommandOptions for RegisterCommandOptions {
     }
 }
 
-pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteraction) {
+pub async fn run(_bot: &Bot, ctx: &Context, command: &ApplicationCommandInteraction) {
     // Parse options
     let options = RegisterCommandOptions::from_options_list(&command.data.options);
 

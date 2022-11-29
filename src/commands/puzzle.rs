@@ -1,3 +1,4 @@
+use chrono::{Datelike, Utc};
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::prelude::Context;
@@ -7,12 +8,13 @@ use serenity::{
 };
 
 use crate::bot::Bot;
+use crate::format::make_puzzle_embed;
 
 use super::{extract_int_option, CommandOptions};
 
 struct PuzzleCommandOptions {
-    day: Option<usize>,
-    year: Option<usize>,
+    day: Option<u32>,
+    year: i32,
 }
 
 // TODO: To think about: should these options do the defaulting to the current day/year? or should that happen in run()?
@@ -20,14 +22,16 @@ struct PuzzleCommandOptions {
 impl CommandOptions for PuzzleCommandOptions {
     fn from_options_list(options_list: &[CommandDataOption]) -> Self {
         Self {
-            day: extract_int_option(options_list, "day").map(|v| v as usize),
-            year: extract_int_option(options_list, "year").map(|v| v as usize),
+            day: extract_int_option(options_list, "day").map(|v| v as u32),
+            year: extract_int_option(options_list, "year")
+                .map(|v| v as i32)
+                .unwrap_or_else(|| Utc::now().year()),
         }
     }
 }
 // Command //
 
-pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteraction) {
+pub async fn run(_bot: &Bot, ctx: &Context, command: &ApplicationCommandInteraction) {
     // Parse options
     let options = PuzzleCommandOptions::from_options_list(&command.data.options);
 
@@ -35,10 +39,29 @@ pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteracti
     command
         .create_interaction_response(&ctx.http, |response| {
             response.interaction_response_data(|message| {
-                message.content(format!(
-                    "pretend this is a puzzle. Day={:?} Year={:?}",
-                    options.day, options.year,
-                ))
+                if Utc::now().month() != 12 && options.year == Utc::now().year() {
+                    message.ephemeral(true).content(format!(
+                        "It's not yet December, please specify a year between 2015 and {}",
+                        Utc::now().year() - 1,
+                    ))
+                } else if options.day.is_none() && options.year != Utc::now().year() {
+                    message
+                        .ephemeral(true)
+                        .content("When using a previous year, you must also specify a day")
+                } else if options.year > Utc::now().year() {
+                    message
+                        .ephemeral(true)
+                        .content("You can't use a year in the future 🗞️")
+                } else {
+                    message.embed(|e| {
+                        make_puzzle_embed(
+                            e,
+                            options.year,
+                            options.day.unwrap_or_else(|| Utc::now().day()),
+                            false,
+                        )
+                    })
+                }
             })
         })
         .await
