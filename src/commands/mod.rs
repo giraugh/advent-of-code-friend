@@ -8,6 +8,7 @@ pub mod daily;
 pub mod leaderboard;
 pub mod puzzle;
 pub mod register;
+pub mod status;
 pub mod unregister;
 
 fn extract_string_option(options_list: &[CommandDataOption], option_name: &str) -> Option<String> {

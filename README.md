@@ -26,13 +26,13 @@ Register the bot to send the leaderboard into a channel you specify at a specifi
 
 Note: Registering the same channel twice will override the previous registration.
 
-### `/daily unregister leaderboard <channel>`
-
-Clear any leaderboard registration bound to this channel.
-
 ### `/daily puzzle <channel> [hour]`
 
 Register the bot to send the latest puzzle into a channel you specify at a specific time every day (of December). By default it will send at midnight EST.
+
+### `/daily unregister leaderboard <channel>`
+
+Clear any leaderboard registration bound to this channel.
 
 ### `/daily unregister puzzle <channel>`
 

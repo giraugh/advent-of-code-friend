@@ -68,6 +68,7 @@ impl EventHandler for Bot {
                 "leaderboard" => commands::leaderboard::run(self, &ctx, &command).await,
                 "puzzle" => commands::puzzle::run(self, &ctx, &command).await,
                 "daily" => commands::daily::run(self, &ctx, &command).await,
+                "status" => commands::status::run(self, &ctx, &command).await,
                 _ => {}
             }
         }
@@ -95,6 +96,7 @@ impl EventHandler for Bot {
                 .create_application_command(commands::leaderboard::register)
                 .create_application_command(commands::puzzle::register)
                 .create_application_command(commands::daily::register)
+                .create_application_command(commands::status::register)
         })
         .await
         .expect("to have created guild commands");

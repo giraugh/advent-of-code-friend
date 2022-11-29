@@ -36,9 +36,13 @@ pub async fn run(
 
     // Save data
     let mut config = Config::get().expect("Failed to load config");
-    config
-        .daily_puzzle_configs
-        .insert(options.channel.id, DailyPuzzleConfig { hour: options.hour });
+    config.daily_puzzle_configs.insert(
+        options.channel.id,
+        DailyPuzzleConfig {
+            guild_id: interaction.guild_id.expect("guild id").to_string(),
+            hour: options.hour,
+        },
+    );
 
     // Respond
     interaction
