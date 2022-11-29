@@ -10,12 +10,14 @@ use super::extract_subcommand;
 
 pub mod leaderboard;
 pub mod puzzle;
+pub mod unregister;
 
 pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteraction) {
     match extract_subcommand(&command.data.options) {
         Some(subcommand) => match subcommand.name.as_str() {
             "leaderboard" => leaderboard::run(bot, ctx, command, subcommand).await,
             "puzzle" => puzzle::run(bot, ctx, command, subcommand).await,
+            "unregister" => unregister::run(bot, ctx, command, subcommand).await,
             _ => panic!("Unknown subcommand"),
         },
         None => panic!("Command group called without subcommand"),
@@ -28,4 +30,5 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
         .description("Register a daily update to a specific channel")
         .add_option(leaderboard::register())
         .add_option(puzzle::register())
+        .add_option(unregister::register())
 }

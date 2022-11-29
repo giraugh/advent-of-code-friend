@@ -8,7 +8,7 @@ use serenity::prelude::Context;
 pub async fn run(_bot: &Bot, ctx: &Context, command: &ApplicationCommandInteraction) {
     // Save data
     let mut config = Config::get().expect("Failed to load config");
-    let removed_guild_id = config
+    let removed_guild_config = config
         .guild_configs
         .remove(&command.guild_id.expect("Expected guild ID"));
 
@@ -16,7 +16,7 @@ pub async fn run(_bot: &Bot, ctx: &Context, command: &ApplicationCommandInteract
     command
         .create_interaction_response(&ctx.http, |response| {
             response.interaction_response_data(|message| {
-                if removed_guild_id.is_some() {
+                if removed_guild_config.is_some() {
                     // TODO: Clear dailies here maybe?
                     message.ephemeral(true).embed(|e| {
                         make_message_embed(
