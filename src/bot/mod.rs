@@ -1,6 +1,8 @@
 mod commands;
 mod config;
 
+use chrono::{Datelike, Utc};
+
 use serenity::{
     async_trait,
     model::{gateway::Ready, id::GuildId, prelude::interaction::Interaction},
@@ -8,7 +10,7 @@ use serenity::{
 };
 use std::{env, sync::Arc};
 
-use crate::aoc::{AOCData, Leaderboard, LeaderboardCacheEntry};
+use crate::aoc::{AOCData, LeaderboardCacheEntry};
 
 use self::config::Config;
 
@@ -48,7 +50,7 @@ impl Bot {
             let mut aoc_data = self.aoc_data.lock().await;
             aoc_data
                 .get_leaderboard(
-                    "2015",
+                    "2015", // &Utc::now().year().to_string(),
                     &guild_config.leaderboard_id,
                     &guild_config.session_token,
                 )

@@ -32,14 +32,12 @@ pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteracti
     // Parse command options
     let options = LeaderboardCommandOptions::from_options_list(&command.data.options);
 
+    // Do a defer
+    command.defer(&ctx.http).await.expect("Defer interaction");
+
     // Get leaderboard
-    let leaderboard = bot
-        .get_registered_leaderboard(
-            command
-                .guild_id
-                .expect("Command to have associated guild id"),
-        )
-        .await;
+    let guild_id = command.guild_id.expect("command to have guild id");
+    let leaderboard = bot.get_registered_leaderboard(guild_id).await;
 
     // TODO: format leaderboard properly
 
