@@ -2,11 +2,20 @@ use std::collections::HashMap;
 
 use crate::bot::Bot;
 use crate::config::{Config, DailyLeaderboardConfig, DailyPuzzleConfig};
-use crate::format::make_status_embed;
+use crate::format::EMBED_COLOR;
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::prelude::ChannelId;
 use serenity::prelude::Context;
+
+// TODO: @ewan can this be an impl on String somehow?
+fn not_empty_or(value: String, or: &str) -> String {
+    if value.is_empty() {
+        or.to_string()
+    } else {
+        value
+    }
+}
 
 pub async fn run(_bot: &Bot, ctx: &Context, command: &ApplicationCommandInteraction) {
     let guild_id = command.guild_id.expect("guild id expected");
@@ -31,11 +40,55 @@ pub async fn run(_bot: &Bot, ctx: &Context, command: &ApplicationCommandInteract
     command
         .create_interaction_response(&ctx.http, |response| {
             response.interaction_response_data(|message| {
-                message.ephemeral(true).add_embed(make_status_embed(
-                    guild_config,
-                    daily_leaderboard_configs,
-                    daily_puzzle_configs,
-                ))
+                message.ephemeral(true).embed(|embed| {
+                    embed
+                        .title("📋  Status")
+                        .description(if guild_config.is_some() {
+                            format!(
+                                "✅ This server has a registered leaderboard (`{}`)",
+                                guild_config.unwrap().leaderboard_id
+                            )
+                        } else {
+                            String::from("❌ This server does not have a registered leaderboard")
+                        })
+                        .field(
+                            "Daily Leaderboards",
+                            not_empty_or(
+                                daily_leaderboard_configs
+                                    .iter()
+                                    .map(|config| {
+                                        format!(
+                                            "<#{}> at {:0>2}:00",
+                                            config.0,
+                                            config.1.hour.unwrap_or(0)
+                                        )
+                                    })
+                                    .collect::<Vec<String>>()
+                                    .join("\n"),
+                                "There are no daily leaderboards set up",
+                            ),
+                            false,
+                        )
+                        .field(
+                            "Daily Puzzles",
+                            not_empty_or(
+                                daily_puzzle_configs
+                                    .iter()
+                                    .map(|config| {
+                                        format!(
+                                            "<#{}> at {:0>2}:00",
+                                            config.0,
+                                            config.1.hour.unwrap_or(0)
+                                        )
+                                    })
+                                    .collect::<Vec<String>>()
+                                    .join("\n"),
+                                "There are no daily puzzles set up",
+                            ),
+                            false,
+                        )
+                        .color(EMBED_COLOR)
+                })
             })
         })
         .await

@@ -5,6 +5,7 @@ use serenity::model::prelude::{
 };
 
 pub mod daily;
+pub mod help;
 pub mod leaderboard;
 pub mod puzzle;
 pub mod register;

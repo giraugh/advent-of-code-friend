@@ -1,13 +1,13 @@
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 
-use serenity::{builder::CreateEmbed, model::prelude::ChannelId};
+use serenity::builder::CreateEmbed;
 
 use crate::{
     aoc::{Leaderboard, LeaderboardCacheEntry},
-    config::{DailyLeaderboardConfig, DailyPuzzleConfig, GuildConfig, LeaderboardOrdering},
+    config::LeaderboardOrdering,
 };
 
-const EMBED_COLOR: i32 = 0xFFFE60;
+pub const EMBED_COLOR: i32 = 0xFFFE60;
 
 macro_rules! trunc {
     ($s:expr, $n: expr) => {{
@@ -27,7 +27,7 @@ pub fn make_leaderboard_embed(
     ordering: LeaderboardOrdering,
 ) -> &mut CreateEmbed {
     create_embed
-        .title("Leaderboard")
+        .title("🏆  Leaderboard")
         .description(leaderboard_embed_content(
             &leaderboard.leaderboard,
             ordering,
@@ -107,70 +107,12 @@ pub fn make_puzzle_embed(
 
     create_embed
         .title(format!(
-            "{}Day {day}, {year}",
-            if new { "New Puzzle: " } else { "" }
+            "{} Day {day}, {year}",
+            if new { "🎁  New Puzzle:" } else { "🧩 " }
         )) // TODO: Scrape name of puzzle from the page
         .description(&puzzle_url)
         .url(&puzzle_url)
         .color(EMBED_COLOR)
-}
-
-// TODO: @ewan can this be an impl on String somehow?
-fn not_empty_or(value: String, or: &str) -> String {
-    if value.is_empty() {
-        or.to_string()
-    } else {
-        value
-    }
-}
-
-pub fn make_status_embed(
-    guild_config: Option<&GuildConfig>,
-    daily_leaderboard_configs: HashMap<&ChannelId, &DailyLeaderboardConfig>,
-    daily_puzzle_configs: HashMap<&ChannelId, &DailyPuzzleConfig>,
-) -> CreateEmbed {
-    let guild_registration_status = if guild_config.is_some() {
-        format!(
-            "✅ This server has a registered leaderboard (`{}`)",
-            guild_config.unwrap().leaderboard_id
-        )
-    } else {
-        String::from("❌ This server does not have a registered leaderboard")
-    };
-
-    CreateEmbed::default()
-        .title("Status")
-        .description(guild_registration_status)
-        .field(
-            "Daily Leaderboards",
-            not_empty_or(
-                daily_leaderboard_configs
-                    .iter()
-                    .map(|config| {
-                        format!("<#{}> at {:0>2}:00", config.0, config.1.hour.unwrap_or(0))
-                    })
-                    .collect::<Vec<String>>()
-                    .join("\n"),
-                "There are no daily leaderboards set up",
-            ),
-            false,
-        )
-        .field(
-            "Daily Puzzles",
-            not_empty_or(
-                daily_puzzle_configs
-                    .iter()
-                    .map(|config| {
-                        format!("<#{}> at {:0>2}:00", config.0, config.1.hour.unwrap_or(0))
-                    })
-                    .collect::<Vec<String>>()
-                    .join("\n"),
-                "There are no daily puzzles set up",
-            ),
-            false,
-        )
-        .color(EMBED_COLOR)
-        .to_owned()
 }
 
 pub enum ResponseReason {
