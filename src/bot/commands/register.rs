@@ -42,7 +42,11 @@ pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteracti
     // Respond
     command
         .create_interaction_response(&ctx.http, |response| {
-            response.interaction_response_data(|message| message.content("ok :+1:"))
+            response.interaction_response_data(|message| {
+                message
+                    .content("registered a leaderboard for this server :+1:")
+                    .ephemeral(true)
+            })
         })
         .await
         .expect("to respond to command");

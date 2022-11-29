@@ -1,7 +1,10 @@
-use std::{collections::HashMap, error::Error, sync::Arc, time::Instant};
+use std::{collections::HashMap, error::Error, sync::Arc};
 
+use chrono::Utc;
 use reqwest::{Client, StatusCode};
 use serde::Deserialize;
+
+const CACHE_TTL_SECS: i64 = 900;
 
 pub struct AOCData {
     leaderboards: HashMap<LeaderboardCacheKey, Arc<LeaderboardCacheEntry>>,
@@ -19,21 +22,16 @@ impl LeaderboardCacheKey {
 #[derive(Debug)]
 pub struct LeaderboardCacheEntry {
     pub leaderboard: Leaderboard,
-    created_at: std::time::Instant,
+    pub leaderboard_id: String,
+    pub created_at: chrono::DateTime<Utc>,
 }
 
 impl LeaderboardCacheEntry {
     pub fn is_expired(&self) -> bool {
-        Instant::now().duration_since(self.created_at).as_secs() > 900
-    }
-}
-
-impl From<Leaderboard> for Arc<LeaderboardCacheEntry> {
-    fn from(leaderboard: Leaderboard) -> Self {
-        Arc::new(LeaderboardCacheEntry {
-            leaderboard,
-            created_at: Instant::now(),
-        })
+        Utc::now()
+            .signed_duration_since(self.created_at)
+            .num_seconds()
+            > CACHE_TTL_SECS
     }
 }
 
@@ -60,7 +58,11 @@ impl AOCData {
             _ => fetch_leaderboard(&self.http_client, event_id, leaderboard_id, session_token)
                 .await
                 .map(|leaderboard| {
-                    let entry: Arc<LeaderboardCacheEntry> = leaderboard.into();
+                    let entry = Arc::new(LeaderboardCacheEntry {
+                        leaderboard,
+                        leaderboard_id: leaderboard_id.to_owned(),
+                        created_at: Utc::now(),
+                    });
                     self.leaderboards.insert(key, entry.clone());
                     entry
                 }),
