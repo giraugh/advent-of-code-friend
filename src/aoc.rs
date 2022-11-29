@@ -1,4 +1,4 @@
-use std::{collections::HashMap, rc::Rc, sync::Arc, time::Instant};
+use std::{collections::HashMap, error::Error, sync::Arc, time::Instant};
 
 use reqwest::{Client, StatusCode};
 use serde::Deserialize;
@@ -50,7 +50,7 @@ impl AOCData {
         event_id: &str,
         leaderboard_id: &str,
         session_token: &str,
-    ) -> Result<Arc<LeaderboardCacheEntry>, reqwest::Error> {
+    ) -> Result<Arc<LeaderboardCacheEntry>, Box<dyn Error>> {
         let key = LeaderboardCacheKey::new(event_id, leaderboard_id);
         match self.leaderboards.get(&key) {
             // If we have an unexpired cache entry, return it
@@ -115,7 +115,7 @@ async fn fetch_leaderboard(
     event_id: &str,
     leaderboard_id: &str,
     session_token: &str,
-) -> Result<Leaderboard, reqwest::Error> {
+) -> Result<Leaderboard, Box<dyn Error>> {
     // Fetch
     let res = client
         .get(format!(
@@ -125,10 +125,10 @@ async fn fetch_leaderboard(
         .send()
         .await?;
 
-    // TODO: stuff
-    // if res.status() == StatusCode::NOT_FOUND {
-    //     return Err("No such leaderboard found");
-    // }
+    // Check that the request was successfull
+    if res.status() == StatusCode::NOT_FOUND {
+        return Err("No such leaderboard found".to_owned().into());
+    }
 
     // Parse
     let leaderboard = res.json().await?;
