@@ -18,21 +18,15 @@ pub async fn run(_bot: &Bot, ctx: &Context, command: &ApplicationCommandInteract
             response.interaction_response_data(|message| {
                 if removed_guild_config.is_some() {
                     // TODO: Clear dailies here maybe?
-                    message.ephemeral(true).embed(|e| {
-                        make_message_embed(
-                            e,
-                            ResponseReason::Success,
-                            "Successfully unregistered this server.",
-                        )
-                    })
+                    message.ephemeral(true).add_embed(make_message_embed(
+                        ResponseReason::Success,
+                        "Successfully unregistered this server.",
+                    ))
                 } else {
-                    message.ephemeral(true).embed(|e| {
-                        make_message_embed(
-                            e,
-                            ResponseReason::Error,
-                            "There was no registration associated with this server. You can set one up with `/register`.",
-                        )
-                    })
+                    message.ephemeral(true).add_embed(make_message_embed(
+                        ResponseReason::Error,
+                        "There was no registration associated with this server. You can set one up with `/register`.",
+                    ))
                 }
             })
         })

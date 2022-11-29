@@ -22,11 +22,10 @@ macro_rules! trunc {
 }
 
 pub fn make_leaderboard_embed(
-    create_embed: &mut CreateEmbed,
     leaderboard: Arc<LeaderboardCacheEntry>,
     ordering: LeaderboardOrdering,
-) -> &mut CreateEmbed {
-    create_embed
+) -> CreateEmbed {
+    CreateEmbed::default()
         .title("🏆  Leaderboard")
         .description(leaderboard_embed_content(
             &leaderboard.leaderboard,
@@ -38,6 +37,7 @@ pub fn make_leaderboard_embed(
             &leaderboard.leaderboard_id,
         ))
         .color(EMBED_COLOR)
+        .to_owned()
 }
 
 pub fn leaderboard_embed_content(
@@ -97,15 +97,10 @@ pub fn leaderboard_embed_content(
     format!("```js\n{}```", content)
 }
 
-pub fn make_puzzle_embed(
-    create_embed: &mut CreateEmbed,
-    year: i32,
-    day: u32,
-    new: bool,
-) -> &mut CreateEmbed {
+pub fn make_puzzle_embed(year: i32, day: u32, new: bool) -> CreateEmbed {
     let puzzle_url = generate_puzzle_url(year, day);
 
-    create_embed
+    CreateEmbed::default()
         .title(format!(
             "{} Day {day}, {year}",
             if new { "🎁  New Puzzle:" } else { "🧩 " }
@@ -113,6 +108,7 @@ pub fn make_puzzle_embed(
         .description(&puzzle_url)
         .url(&puzzle_url)
         .color(EMBED_COLOR)
+        .to_owned()
 }
 
 pub enum ResponseReason {
@@ -120,12 +116,8 @@ pub enum ResponseReason {
     Error,
 }
 
-pub fn make_message_embed<'a>(
-    create_embed: &'a mut CreateEmbed,
-    reason: ResponseReason,
-    message: &str,
-) -> &'a mut CreateEmbed {
-    create_embed
+pub fn make_message_embed(reason: ResponseReason, message: &str) -> CreateEmbed {
+    CreateEmbed::default()
         .title(match reason {
             ResponseReason::Success => "✅  Success",
             ResponseReason::Error => "❌  Error",
@@ -135,6 +127,7 @@ pub fn make_message_embed<'a>(
             ResponseReason::Error => 0xDD2D44,
         })
         .description(message)
+        .to_owned()
 }
 
 pub fn generate_leaderboard_url(year: &str, id: &str) -> String {

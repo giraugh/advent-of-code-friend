@@ -17,20 +17,20 @@ pub enum LeaderboardOrdering {
     Stars,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize)]
 pub struct GuildConfig {
     pub session_token: String,
     pub leaderboard_id: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize)]
 pub struct DailyLeaderboardConfig {
     pub guild_id: String,
     pub hour: Option<isize>,
     pub ordering: LeaderboardOrdering,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize)]
 pub struct DailyPuzzleConfig {
     pub guild_id: String,
     pub hour: Option<isize>,

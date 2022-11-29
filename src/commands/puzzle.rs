@@ -17,8 +17,6 @@ struct PuzzleCommandOptions {
     year: i32,
 }
 
-// TODO: To think about: should these options do the defaulting to the current day/year? or should that happen in run()?
-
 impl CommandOptions for PuzzleCommandOptions {
     fn from_options_list(options_list: &[CommandDataOption]) -> Self {
         Self {
@@ -40,41 +38,29 @@ pub async fn run(_bot: &Bot, ctx: &Context, command: &ApplicationCommandInteract
         .create_interaction_response(&ctx.http, |response| {
             response.interaction_response_data(|message| {
                 if Utc::now().month() != 12 && options.year == Utc::now().year() {
-                    message.ephemeral(true).embed(|e| {
-                        make_message_embed(
-                            e,
-                            ResponseReason::Error,
-                            &format!(
-                                "It's not yet December, please specify a year between 2015 and {}",
-                                Utc::now().year() - 1,
-                            ),
-                        )
-                    })
+                    message.ephemeral(true).add_embed(make_message_embed(
+                        ResponseReason::Error,
+                        &format!(
+                            "It's not yet December, please specify a year between 2015 and {}",
+                            Utc::now().year() - 1,
+                        ),
+                    ))
                 } else if options.year > Utc::now().year() {
-                    message.ephemeral(true).embed(|e| {
-                        make_message_embed(
-                            e,
-                            ResponseReason::Error,
-                            "You can't use a year in the future 🗞️",
-                        )
-                    })
+                    message.ephemeral(true).add_embed(make_message_embed(
+                        ResponseReason::Error,
+                        "You can't use a year in the future 🗞️",
+                    ))
                 } else if options.day.is_none() && options.year != Utc::now().year() {
-                    message.ephemeral(true).embed(|e| {
-                        make_message_embed(
-                            e,
-                            ResponseReason::Error,
-                            "When using a previous year, you must also specify a day",
-                        )
-                    })
+                    message.ephemeral(true).add_embed(make_message_embed(
+                        ResponseReason::Error,
+                        "When using a previous year, you must also specify a day",
+                    ))
                 } else {
-                    message.embed(|e| {
-                        make_puzzle_embed(
-                            e,
-                            options.year,
-                            options.day.unwrap_or_else(|| Utc::now().day()),
-                            false,
-                        )
-                    })
+                    message.add_embed(make_puzzle_embed(
+                        options.year,
+                        options.day.unwrap_or_else(|| Utc::now().day()),
+                        false,
+                    ))
                 }
             })
         })

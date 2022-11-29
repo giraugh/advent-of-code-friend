@@ -19,7 +19,6 @@ impl LeaderboardCacheKey {
     }
 }
 
-#[derive(Debug)]
 pub struct LeaderboardCacheEntry {
     pub leaderboard: Leaderboard,
     pub leaderboard_id: String,
@@ -70,7 +69,7 @@ impl AOCData {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 pub struct Leaderboard {
     /// What event this leaderboard is for. Typically this is the year (e.g 2020)
     pub event: String,
@@ -82,7 +81,7 @@ pub struct Leaderboard {
     pub members: HashMap<String, LeaderboardMember>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 pub struct LeaderboardMember {
     /// Name of user
     pub name: String,
@@ -106,7 +105,7 @@ pub struct LeaderboardMember {
     pub completion_day_level: HashMap<usize, HashMap<usize, CompletionDayLevelEntry>>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 pub struct CompletionDayLevelEntry {
     star_index: usize,
     get_star_ts: usize,

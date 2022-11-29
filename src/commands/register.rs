@@ -45,13 +45,10 @@ pub async fn run(_bot: &Bot, ctx: &Context, command: &ApplicationCommandInteract
     command
         .create_interaction_response(&ctx.http, |response| {
             response.interaction_response_data(|message| {
-                message.ephemeral(true).embed(|e| {
-                    make_message_embed(
-                        e,
-                        ResponseReason::Success,
-                        "Successfully registered your leaderboard to this server. You can now set up daily announcements and run `/leaderboard`.\n\nRun this command again to change the registration details, or use `/unregister` to remove this registration.",
-                    )
-                })
+                message.ephemeral(true).add_embed(make_message_embed(
+                    ResponseReason::Success,
+                    "Successfully registered your leaderboard to this server. You can now set up daily announcements and run `/leaderboard`.\n\nRun this command again to change the registration details, or use `/unregister` to remove this registration.",
+                ))
             })
         })
         .await

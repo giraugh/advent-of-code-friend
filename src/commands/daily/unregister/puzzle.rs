@@ -41,21 +41,15 @@ pub async fn run(
         .create_interaction_response(&ctx.http, |response| {
             response.interaction_response_data(|message| {
                 if removed_puzzle_config.is_some() {
-                    message.ephemeral(true).embed(|e| {
-                        make_message_embed(
-                            e,
-                            ResponseReason::Success,
-                            &format!("Successfully removed the daily puzzle from <#{}>", options.channel.id),
-                        )
-                    })
+                    message.ephemeral(true).add_embed(make_message_embed(
+                        ResponseReason::Success,
+                        &format!("Successfully removed the daily puzzle from <#{}>", options.channel.id),
+                    ))
                 } else {
-                    message.ephemeral(true).embed(|e| {
-                        make_message_embed(
-                            e,
-                            ResponseReason::Error,
-                            "There was no daily puzzle on that channel. You can set one up with `/daily puzzle`.",
-                        )
-                    })
+                    message.ephemeral(true).add_embed(make_message_embed(
+                        ResponseReason::Error,
+                        "There was no daily puzzle on that channel. You can set one up with `/daily puzzle`.",
+                    ))
                 }
             })
         })

@@ -47,8 +47,7 @@ pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteracti
             // Respond
             command
                 .create_followup_message(&ctx.http, |message| {
-                    message
-                        .embed(|embed| make_leaderboard_embed(embed, leaderboard, options.ordering))
+                    message.add_embed(make_leaderboard_embed(leaderboard, options.ordering))
                 })
                 .await
                 .expect("failed to create interaction response");
@@ -58,13 +57,10 @@ pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteracti
         Err(error) => {
             command
                 .create_followup_message(&ctx.http, |message| {
-                    message.embed(|e| {
-                        make_message_embed(
-                            e,
-                            ResponseReason::Error,
-                            &format!("Failed to get leaderboard: {}", error),
-                        )
-                    })
+                    message.add_embed(make_message_embed(
+                        ResponseReason::Error,
+                        &format!("Failed to get leaderboard: {}", error),
+                    ))
                 })
                 .await
                 .expect("failed to send error response");
