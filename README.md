@@ -20,7 +20,7 @@ Uses the registered leaderboard ID to fetch the leaderboard and post it. You can
 
 Posts a link to the latest puzzle (or for a day/year you choose).
 
-### `/daily leaderboard <channel> [time] [ordering]`
+### `/daily leaderboard <channel> [hour] [ordering]`
 
 Register the bot to send the leaderboard into a channel you specify at a specific time every day (of December). By default it will send at midnight EST. You can also change the ordering used by the leaderboard that's sent.
 
@@ -30,7 +30,7 @@ Note: Registering the same channel twice will override the previous registration
 
 Clear any leaderboard registration bound to this channel.
 
-### `/daily puzzle <channel> [time]`
+### `/daily puzzle <channel> [hour]`
 
 Register the bot to send the latest puzzle into a channel you specify at a specific time every day (of December). By default it will send at midnight EST.
 
