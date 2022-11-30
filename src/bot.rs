@@ -41,7 +41,7 @@ impl Bot {
         let guild_config = config
             .guild_configs
             .get(&guild_id)
-            .ok_or_else(|| "guild has no registered leaderboard".to_owned())?;
+            .ok_or_else(|| "server has no registered leaderboard".to_owned())?;
 
         // Get leaderboard
         let leaderboard = {

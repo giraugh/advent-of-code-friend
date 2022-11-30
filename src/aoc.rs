@@ -105,6 +105,7 @@ pub struct LeaderboardMember {
     pub completion_day_level: HashMap<usize, HashMap<usize, CompletionDayLevelEntry>>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct CompletionDayLevelEntry {
     star_index: usize,

@@ -89,7 +89,7 @@ pub fn leaderboard_embed_content(
         .enumerate()
         .map(|(i, member)| {
             format!(
-                "{}: {}  {} ⭐️\n",
+                "{}: {}  {} {}\n",
                 format_args!(
                     "{:0>width$}",
                     i + 1,
@@ -108,9 +108,21 @@ pub fn leaderboard_embed_content(
                             .unwrap_or(format!("Anon #{}", member.id)),
                         MAX_NAME_LENGTH
                     ),
-                    width = longest_name_len
+                    width = longest_name_len,
                 ),
-                format_args!("{:0>2}", member.local_score),
+                format_args!(
+                    "{:0>width$}",
+                    match ordering {
+                        LeaderboardOrdering::LocalScore => member.local_score,
+                        LeaderboardOrdering::GlobalScore => member.global_score,
+                        LeaderboardOrdering::Stars => member.stars,
+                    },
+                    width = 2, // TODO: Base this on the largest score being used
+                ),
+                match ordering {
+                    LeaderboardOrdering::Stars => "⭐️",
+                    _ => "💎",
+                },
             )
         })
         .collect();

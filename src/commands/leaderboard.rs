@@ -24,7 +24,7 @@ impl CommandOptions for LeaderboardCommandOptions {
         Self {
             ordering: extract_string_option(options_list, "ordering")
                 .and_then(|ordering| ordering.parse().ok())
-                .unwrap_or(LeaderboardOrdering::GlobalScore),
+                .unwrap_or(LeaderboardOrdering::LocalScore),
             year: extract_int_option(options_list, "year")
                 .map(|v| v as i32)
                 .unwrap_or_else(|| Utc::now().year()),
