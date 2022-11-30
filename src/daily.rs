@@ -19,9 +19,6 @@ pub async fn daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
     loop {
         // Get current time in EST
         let time = Utc::now().with_timezone(&tz);
-        let year = time.year() as usize;
-        let day = time.day() as usize;
-        let hour = time.hour() as usize;
 
         // Wait until the hour
         let mins_until_hour = 60 - time.minute() as u64;
@@ -37,6 +34,11 @@ pub async fn daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
             // Keep waiting...
             continue;
         }
+
+        // Get the current time after waiting
+        let year = time.year() as usize;
+        let day = time.day() as usize;
+        let hour = time.hour() as usize;
 
         // Set our activity
         ctx.set_activity(Activity::playing(format!("Advent of Code Day {}", day)))
