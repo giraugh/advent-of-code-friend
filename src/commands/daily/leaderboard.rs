@@ -58,7 +58,8 @@ pub async fn run(
                 message.ephemeral(true).add_embed(make_message_embed(
                     ResponseReason::Success,
                     &format!(
-                        "Successfully registered daily leaderboards to <#{}>. They will be posted at **{}** every day of December.\n\nRun this command again to update the settings, or use `/daily unregister leaderboard` to remove this daily.",
+                        "Successfully registered daily leaderboards to <#{}>. They will be posted at **{}** every day of December.\n\n\
+                        Run this command again to update the settings, or use `/daily unregister leaderboard` to remove this daily.",
                         options.channel.id,
                         format_args!("{:0>2}:00 EST", options.hour.unwrap_or(0)),
                     ),

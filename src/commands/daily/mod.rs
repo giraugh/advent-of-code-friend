@@ -8,9 +8,9 @@ use crate::bot::Bot;
 
 use super::extract_subcommand;
 
-pub mod leaderboard;
-pub mod puzzle;
-pub mod unregister;
+mod leaderboard;
+mod puzzle;
+mod unregister;
 
 pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteraction) {
     match extract_subcommand(&command.data.options) {

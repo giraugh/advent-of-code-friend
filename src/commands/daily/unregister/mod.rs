@@ -11,8 +11,8 @@ use crate::bot::Bot;
 
 use super::super::extract_subcommand;
 
-pub mod leaderboard;
-pub mod puzzle;
+mod leaderboard;
+mod puzzle;
 
 pub async fn run(
     bot: &Bot,
