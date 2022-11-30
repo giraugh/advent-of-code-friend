@@ -25,13 +25,15 @@ pub struct GuildConfig {
 
 #[derive(Serialize, Deserialize)]
 pub struct DailyLeaderboardConfig {
-    pub hour: u8,
+    pub guild_id: String,
+    pub hour: Option<isize>,
     pub ordering: LeaderboardOrdering,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct DailyPuzzleConfig {
-    pub hour: u8,
+    pub guild_id: String,
+    pub hour: Option<isize>,
 }
 
 #[derive(Serialize, Deserialize)]

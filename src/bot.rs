@@ -34,20 +34,21 @@ impl Bot {
     pub async fn get_registered_leaderboard(
         &self,
         guild_id: GuildId,
+        year: i32,
     ) -> Result<Arc<LeaderboardCacheEntry>, String> {
         // Get config for guild
         let config = Config::get().expect("Failed to load config");
         let guild_config = config
             .guild_configs
             .get(&guild_id)
-            .ok_or_else(|| "Guild has no registered leaderboard".to_owned())?;
+            .ok_or_else(|| "server has no registered leaderboard".to_owned())?;
 
         // Get leaderboard
         let leaderboard = {
             let mut aoc_data = self.aoc_data.lock().await;
             aoc_data
                 .get_leaderboard(
-                    "2015", // &Utc::now().year().to_string(),
+                    &year.to_string(),
                     &guild_config.leaderboard_id,
                     &guild_config.session_token,
                 )
@@ -64,15 +65,22 @@ impl EventHandler for Bot {
         if let Interaction::ApplicationCommand(command) = interaction {
             match command.data.name.as_str() {
                 "register" => commands::register::run(self, &ctx, &command).await,
+                "unregister" => commands::unregister::run(self, &ctx, &command).await,
                 "leaderboard" => commands::leaderboard::run(self, &ctx, &command).await,
                 "puzzle" => commands::puzzle::run(self, &ctx, &command).await,
+                "daily" => commands::daily::run(self, &ctx, &command).await,
+                "status" => commands::status::run(self, &ctx, &command).await,
+                "help" => commands::help::run(self, &ctx, &command).await,
                 _ => {}
             }
         }
     }
 
     async fn ready(&self, ctx: Context, ready: Ready) {
-        println!("Bot is connected as {}", ready.user.name);
+        println!(
+            "Bot is connected as {}#{}",
+            ready.user.name, ready.user.discriminator
+        );
 
         // For now, we will register local commands, to do so get the guild id
         let guild_id = GuildId(
@@ -86,8 +94,12 @@ impl EventHandler for Bot {
         GuildId::set_application_commands(&guild_id, &ctx.http, |commmands| {
             commmands
                 .create_application_command(commands::register::register)
+                .create_application_command(commands::unregister::register)
                 .create_application_command(commands::leaderboard::register)
                 .create_application_command(commands::puzzle::register)
+                .create_application_command(commands::daily::register)
+                .create_application_command(commands::status::register)
+                .create_application_command(commands::help::register)
         })
         .await
         .expect("to have created guild commands");

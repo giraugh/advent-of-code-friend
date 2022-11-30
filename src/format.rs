@@ -7,12 +7,15 @@ use crate::{
     config::LeaderboardOrdering,
 };
 
+pub const EMBED_COLOR: i32 = 0xFFFE60;
+const MAX_NAME_LENGTH: usize = 30;
+
 macro_rules! trunc {
     ($s:expr, $n: expr) => {{
         let mut s = $s.clone();
         if (s.len() > $n) {
             s.truncate($n - 3);
-            format!("{}...", s)
+            format!("{}...", s.trim())
         } else {
             s
         }
@@ -20,21 +23,23 @@ macro_rules! trunc {
 }
 
 pub fn make_leaderboard_embed(
-    create_embed: &mut CreateEmbed,
     leaderboard: Arc<LeaderboardCacheEntry>,
     ordering: LeaderboardOrdering,
-) -> &mut CreateEmbed {
-    create_embed
-        .title("Leaderboard")
+) -> CreateEmbed {
+    CreateEmbed::default()
+        .title("🏆  Leaderboard")
         .description(leaderboard_embed_content(
             &leaderboard.leaderboard,
             ordering,
         ))
         .timestamp(leaderboard.created_at.to_rfc3339())
-        .url(format!(
-            "https://adventofcode.com/{}/leaderboard/private/view/{}",
-            leaderboard.leaderboard.event, leaderboard.leaderboard_id
+        .url(generate_leaderboard_url(
+            &leaderboard.leaderboard.event,
+            &leaderboard.leaderboard_id,
         ))
+        .color(EMBED_COLOR)
+        .footer(|f| f.text(format!("Year {}", leaderboard.leaderboard.event)))
+        .to_owned()
 }
 
 pub fn leaderboard_embed_content(
@@ -51,17 +56,30 @@ pub fn leaderboard_embed_content(
     // Get longest name
     let longest_name_len = members
         .iter()
-        .map(|member| member.name.len())
+        .map(|member| {
+            member
+                .name
+                .to_owned()
+                .unwrap_or(format!("Anon #{}", member.id))
+                .len()
+        })
         .max()
-        .unwrap_or(20)
-        .min(20);
+        .unwrap_or(MAX_NAME_LENGTH)
+        .min(MAX_NAME_LENGTH);
 
     // Sort them
+    // TODO: sort_by should be stable, but appears to reorder equal elements?
     members.sort_by(|a, b| match ordering {
-        LeaderboardOrdering::LocalScore => a.local_score.cmp(&b.local_score),
-        LeaderboardOrdering::GlobalScore => a.global_score.cmp(&b.global_score),
-        LeaderboardOrdering::Stars => match a.stars.cmp(&b.stars) {
-            std::cmp::Ordering::Equal => a.last_star_ts.cmp(&b.last_star_ts),
+        // Local score (default)
+        LeaderboardOrdering::LocalScore => b.local_score.cmp(&a.local_score),
+        // Global score (ties broken by local score)
+        LeaderboardOrdering::GlobalScore => match b.global_score.cmp(&a.global_score) {
+            std::cmp::Ordering::Equal => b.local_score.cmp(&a.local_score),
+            x => x,
+        },
+        // Stars (ties broken by who got the most recent star first)
+        LeaderboardOrdering::Stars => match b.stars.cmp(&a.stars) {
+            std::cmp::Ordering::Equal => b.last_star_ts.cmp(&a.last_star_ts),
             x => x,
         },
     });
@@ -71,7 +89,7 @@ pub fn leaderboard_embed_content(
         .enumerate()
         .map(|(i, member)| {
             format!(
-                "{}: {} {} ⭐️\n",
+                "{}: {}  {} {}\n",
                 format_args!(
                     "{:0>width$}",
                     i + 1,
@@ -83,13 +101,75 @@ pub fn leaderboard_embed_content(
                 ),
                 format_args!(
                     "{:width$}",
-                    trunc!(member.name, 20),
-                    width = longest_name_len
+                    trunc!(
+                        member
+                            .name
+                            .to_owned()
+                            .unwrap_or(format!("Anon #{}", member.id)),
+                        MAX_NAME_LENGTH
+                    ),
+                    width = longest_name_len,
                 ),
-                format_args!("{:0>2}", member.local_score),
+                format_args!(
+                    "{:0>width$}",
+                    match ordering {
+                        LeaderboardOrdering::LocalScore => member.local_score,
+                        LeaderboardOrdering::GlobalScore => member.global_score,
+                        LeaderboardOrdering::Stars => member.stars,
+                    },
+                    width = 2, // TODO: Base this on the largest score being used
+                ),
+                match ordering {
+                    LeaderboardOrdering::Stars => "⭐️",
+                    _ => "💎",
+                },
             )
         })
         .collect();
 
     format!("```js\n{}```", content)
+}
+
+pub fn make_puzzle_embed(year: i32, day: u32, new: bool) -> CreateEmbed {
+    let puzzle_url = generate_puzzle_url(year, day);
+
+    CreateEmbed::default()
+        .title(format!(
+            "{} Day {day}, {year}",
+            if new { "🎁  New Puzzle:" } else { "🧩 " }
+        )) // TODO: Scrape name of puzzle from the page
+        .description(&puzzle_url)
+        .url(&puzzle_url)
+        .color(EMBED_COLOR)
+        .to_owned()
+}
+
+pub enum ResponseReason {
+    Success,
+    Error,
+}
+
+pub fn make_message_embed(reason: ResponseReason, message: &str) -> CreateEmbed {
+    CreateEmbed::default()
+        .title(match reason {
+            ResponseReason::Success => "✅  Success",
+            ResponseReason::Error => "❌  Error",
+        })
+        .color(match reason {
+            ResponseReason::Success => 0x77B256,
+            ResponseReason::Error => 0xDD2D44,
+        })
+        .description(message)
+        .to_owned()
+}
+
+pub fn generate_leaderboard_url(year: &str, id: &str) -> String {
+    format!(
+        "https://adventofcode.com/{}/leaderboard/private/view/{}",
+        year, id
+    )
+}
+
+pub fn generate_puzzle_url(year: i32, day: u32) -> String {
+    format!("https://adventofcode.com/{}/day/{}", year, day)
 }
