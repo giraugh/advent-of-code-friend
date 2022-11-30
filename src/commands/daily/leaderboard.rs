@@ -15,7 +15,7 @@ use super::super::{
 
 struct DailyLeaderboardCommandOptions {
     channel: PartialChannel,
-    hour: Option<isize>,
+    hour: isize,
     ordering: LeaderboardOrdering,
 }
 
@@ -23,7 +23,7 @@ impl CommandOptions for DailyLeaderboardCommandOptions {
     fn from_options_list(options_list: &[CommandDataOption]) -> Self {
         Self {
             channel: extract_channel_option(options_list, "channel").expect("Didn't find channel"),
-            hour: extract_int_option(options_list, "hour"),
+            hour: extract_int_option(options_list, "hour").unwrap_or(0),
             ordering: extract_string_option(options_list, "ordering")
                 .and_then(|ordering| ordering.parse().ok())
                 .unwrap_or(LeaderboardOrdering::GlobalScore),
@@ -46,7 +46,7 @@ pub async fn run(
         options.channel.id,
         DailyLeaderboardConfig {
             guild_id: interaction.guild_id.expect("guild id"),
-            hour: options.hour.map(|h| h as usize),
+            hour: options.hour as usize,
             ordering: options.ordering,
         },
     );
@@ -61,7 +61,7 @@ pub async fn run(
                         "Successfully registered daily leaderboards to <#{}>. They will be posted at **{}** every day of December.\n\n\
                         Run this command again to update the settings, or use `/daily unregister leaderboard` to remove this daily.",
                         options.channel.id,
-                        format_args!("{:0>2}:00 EST", options.hour.unwrap_or(0)),
+                        format_args!("{:0>2}:00 EST", options.hour),
                     ),
                 ))
             })

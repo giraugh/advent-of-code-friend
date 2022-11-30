@@ -65,7 +65,7 @@ pub async fn post_daily_leaderboards(
     // Post embeds
     for (channel_id, lb_config) in &config.daily_leaderboard_configs {
         // Is it the right hour?
-        if lb_config.hour.unwrap_or(0) != current_hour {
+        if lb_config.hour != current_hour {
             continue;
         }
 
@@ -101,7 +101,7 @@ pub async fn post_daily_puzzles(
     // Post embeds
     for (channel_id, pz_config) in &config.daily_puzzle_configs {
         // Is it the right hour?
-        if pz_config.hour.unwrap_or(0) != hour {
+        if pz_config.hour != hour {
             continue;
         }
 

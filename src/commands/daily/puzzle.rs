@@ -13,14 +13,14 @@ use super::super::{extract_channel_option, extract_int_option, CommandOptions};
 
 struct DailyPuzzleCommandOptions {
     channel: PartialChannel,
-    hour: Option<isize>,
+    hour: isize,
 }
 
 impl CommandOptions for DailyPuzzleCommandOptions {
     fn from_options_list(options_list: &[CommandDataOption]) -> Self {
         Self {
             channel: extract_channel_option(options_list, "channel").expect("Didn't find channel"),
-            hour: extract_int_option(options_list, "hour"),
+            hour: extract_int_option(options_list, "hour").unwrap_or(0),
         }
     }
 }
@@ -40,7 +40,7 @@ pub async fn run(
         options.channel.id,
         DailyPuzzleConfig {
             guild_id: interaction.guild_id.expect("guild id"),
-            hour: options.hour.map(|h| h as usize),
+            hour: options.hour as usize,
         },
     );
 
@@ -53,7 +53,7 @@ pub async fn run(
                     &format!(
                         "Successfully registered daily puzzles to <#{}>. They will be posted at **{}** every day of December.\n\nRun this command again to update the settings, or use `/daily unregister puzzle` to remove this daily.",
                         options.channel.id,
-                        format_args!("{:0>2}:00 EST", options.hour.unwrap_or(0)),
+                        format_args!("{:0>2}:00 EST", options.hour),
                     ),
                 ))
             })

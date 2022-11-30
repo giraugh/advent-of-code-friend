@@ -61,11 +61,7 @@ pub async fn run(_bot: &Bot, ctx: &Context, command: &ApplicationCommandInteract
                             daily_leaderboard_configs
                                 .iter()
                                 .map(|config| {
-                                    format!(
-                                        "<#{}> at {:0>2}:00",
-                                        config.0,
-                                        config.1.hour.unwrap_or(0)
-                                    )
+                                    format!("<#{}> at {:0>2}:00", config.0, config.1.hour)
                                 })
                                 .collect::<Vec<String>>()
                                 .join("\n")
@@ -77,11 +73,7 @@ pub async fn run(_bot: &Bot, ctx: &Context, command: &ApplicationCommandInteract
                             daily_puzzle_configs
                                 .iter()
                                 .map(|config| {
-                                    format!(
-                                        "<#{}> at {:0>2}:00",
-                                        config.0,
-                                        config.1.hour.unwrap_or(0)
-                                    )
+                                    format!("<#{}> at {:0>2}:00", config.0, config.1.hour)
                                 })
                                 .collect::<Vec<String>>()
                                 .join("\n")
