@@ -37,6 +37,7 @@ pub fn make_leaderboard_embed(
             &leaderboard.leaderboard_id,
         ))
         .color(EMBED_COLOR)
+        .footer(|f| f.text(format!("Year {}", leaderboard.leaderboard.event)))
         .to_owned()
 }
 

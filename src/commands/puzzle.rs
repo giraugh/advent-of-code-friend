@@ -83,7 +83,7 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
         .create_option(|option| {
             option
                 .name("year")
-                .description("Year to fetch puzzle for (defaults to current year)")
+                .description("Year to fetch puzzle for (default: current year)")
                 .kind(CommandOptionType::Integer)
                 .min_int_value(2015)
         })

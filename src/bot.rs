@@ -34,6 +34,7 @@ impl Bot {
     pub async fn get_registered_leaderboard(
         &self,
         guild_id: GuildId,
+        year: i32,
     ) -> Result<Arc<LeaderboardCacheEntry>, String> {
         // Get config for guild
         let config = Config::get().expect("Failed to load config");
@@ -47,7 +48,7 @@ impl Bot {
             let mut aoc_data = self.aoc_data.lock().await;
             aoc_data
                 .get_leaderboard(
-                    "2015", // &Utc::now().year().to_string(),
+                    &year.to_string(),
                     &guild_config.leaderboard_id,
                     &guild_config.session_token,
                 )

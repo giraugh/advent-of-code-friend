@@ -2,6 +2,7 @@ use crate::bot::Bot;
 use crate::config::LeaderboardOrdering;
 use crate::format::{make_leaderboard_embed, make_message_embed, ResponseReason};
 
+use chrono::{Datelike, Utc};
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::{
@@ -9,12 +10,13 @@ use serenity::model::prelude::interaction::application_command::{
 };
 use serenity::prelude::Context;
 
-use super::{extract_string_option, CommandOptions};
+use super::{extract_int_option, extract_string_option, CommandOptions};
 
 // Options //
 
 struct LeaderboardCommandOptions {
     ordering: LeaderboardOrdering,
+    year: i32,
 }
 
 impl CommandOptions for LeaderboardCommandOptions {
@@ -23,6 +25,9 @@ impl CommandOptions for LeaderboardCommandOptions {
             ordering: extract_string_option(options_list, "ordering")
                 .and_then(|ordering| ordering.parse().ok())
                 .unwrap_or(LeaderboardOrdering::GlobalScore),
+            year: extract_int_option(options_list, "year")
+                .map(|v| v as i32)
+                .unwrap_or_else(|| Utc::now().year()),
         }
     }
 }
@@ -33,12 +38,27 @@ pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteracti
     // Parse command options
     let options = LeaderboardCommandOptions::from_options_list(&command.data.options);
 
+    if options.year > Utc::now().year() {
+        command
+            .create_interaction_response(&ctx.http, |response| {
+                response.interaction_response_data(|message| {
+                    message.ephemeral(true).add_embed(make_message_embed(
+                        ResponseReason::Error,
+                        "You can't use a year in the future 🗞️",
+                    ))
+                })
+            })
+            .await
+            .expect("failed to create interaction response");
+        return;
+    }
+
     // Defer response
     command.defer(&ctx.http).await.unwrap();
 
     // Get leaderboard
     let guild_id = command.guild_id.expect("command to have guild id");
-    let leaderboard = bot.get_registered_leaderboard(guild_id).await;
+    let leaderboard = bot.get_registered_leaderboard(guild_id, options.year).await;
 
     // Respond
     match leaderboard {
@@ -82,5 +102,12 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
                 .add_string_choice("local-score", LeaderboardOrdering::LocalScore)
                 .add_string_choice("global-score", LeaderboardOrdering::GlobalScore)
                 .add_string_choice("stars", LeaderboardOrdering::Stars)
+        })
+        .create_option(|option| {
+            option
+                .name("year")
+                .description("Year to fetch leaderboard for (default: current year)")
+                .kind(CommandOptionType::Integer)
+                .min_int_value(2015)
         })
 }
