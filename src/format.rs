@@ -130,7 +130,7 @@ pub fn leaderboard_embed_content(
     format!("```js\n{}```", content)
 }
 
-pub fn make_puzzle_embed(year: i32, day: u32, new: bool) -> CreateEmbed {
+pub fn make_puzzle_embed(year: usize, day: usize, new: bool) -> CreateEmbed {
     let puzzle_url = generate_puzzle_url(year, day);
 
     CreateEmbed::default()
@@ -170,6 +170,6 @@ pub fn generate_leaderboard_url(year: &str, id: &str) -> String {
     )
 }
 
-pub fn generate_puzzle_url(year: i32, day: u32) -> String {
+pub fn generate_puzzle_url(year: usize, day: usize) -> String {
     format!("https://adventofcode.com/{}/day/{}", year, day)
 }

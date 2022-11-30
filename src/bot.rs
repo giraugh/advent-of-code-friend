@@ -9,18 +9,21 @@ use crate::{
     aoc::{AOCData, LeaderboardCacheEntry},
     commands,
     config::Config,
+    daily,
 };
 
 pub struct Bot {
-    pub aoc_data: Mutex<AOCData>,
+    pub aoc_data: Arc<Mutex<AOCData>>,
 }
 
 impl Bot {
     pub async fn start(token: String) {
-        // Build client
+        // Create bot data
+
+        // Create client
         let mut client = Client::builder(token, GatewayIntents::empty())
             .event_handler(Bot {
-                aoc_data: Mutex::new(AOCData::new()),
+                aoc_data: Arc::new(Mutex::new(AOCData::new())),
             })
             .await
             .expect("to create client");
@@ -77,10 +80,14 @@ impl EventHandler for Bot {
     }
 
     async fn ready(&self, ctx: Context, ready: Ready) {
-        println!(
+        log::info!(
             "Bot is connected as {}#{}",
-            ready.user.name, ready.user.discriminator
+            ready.user.name,
+            ready.user.discriminator
         );
+
+        // Start daily posting thread
+        let daily_thread = tokio::spawn(daily::daily_posts(self.aoc_data.clone(), ctx.clone()));
 
         // For now, we will register local commands, to do so get the guild id
         let guild_id = GuildId(
@@ -103,5 +110,8 @@ impl EventHandler for Bot {
         })
         .await
         .expect("to have created guild commands");
+
+        // Wait for threads
+        daily_thread.await.unwrap();
     }
 }
