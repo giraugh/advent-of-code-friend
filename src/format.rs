@@ -15,7 +15,7 @@ macro_rules! trunc {
         let mut s = $s.clone();
         if (s.len() > $n) {
             s.truncate($n - 3);
-            format!("{}...", s)
+            format!("{}...", s.trim())
         } else {
             s
         }
@@ -68,11 +68,18 @@ pub fn leaderboard_embed_content(
         .min(MAX_NAME_LENGTH);
 
     // Sort them
+    // TODO: sort_by should be stable, but appears to reorder equal elements?
     members.sort_by(|a, b| match ordering {
-        LeaderboardOrdering::LocalScore => a.local_score.cmp(&b.local_score),
-        LeaderboardOrdering::GlobalScore => a.global_score.cmp(&b.global_score),
-        LeaderboardOrdering::Stars => match a.stars.cmp(&b.stars) {
-            std::cmp::Ordering::Equal => a.last_star_ts.cmp(&b.last_star_ts),
+        // Local score (default)
+        LeaderboardOrdering::LocalScore => b.local_score.cmp(&a.local_score),
+        // Global score (ties broken by local score)
+        LeaderboardOrdering::GlobalScore => match b.global_score.cmp(&a.global_score) {
+            std::cmp::Ordering::Equal => b.local_score.cmp(&a.local_score),
+            x => x,
+        },
+        // Stars (ties broken by who got the most recent star first)
+        LeaderboardOrdering::Stars => match b.stars.cmp(&a.stars) {
+            std::cmp::Ordering::Equal => b.last_star_ts.cmp(&a.last_star_ts),
             x => x,
         },
     });
