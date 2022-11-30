@@ -32,13 +32,13 @@ pub async fn run(_bot: &Bot, ctx: &Context, command: &ApplicationCommandInteract
     let daily_leaderboard_configs: HashMap<&ChannelId, &DailyLeaderboardConfig> = config
         .daily_leaderboard_configs
         .iter()
-        .filter(|config| config.1.guild_id == guild_id.to_string())
+        .filter(|config| config.1.guild_id == guild_id)
         .collect();
 
     let daily_puzzle_configs: HashMap<&ChannelId, &DailyPuzzleConfig> = config
         .daily_puzzle_configs
         .iter()
-        .filter(|config| config.1.guild_id == guild_id.to_string())
+        .filter(|config| config.1.guild_id == guild_id)
         .collect();
 
     // Respond

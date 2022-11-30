@@ -10,7 +10,9 @@ use strum::{Display, EnumString};
 
 const CONFIG_FILE: &str = "config.json";
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, EnumString, Display, Serialize, Deserialize)]
+#[derive(
+    Debug, PartialEq, Eq, PartialOrd, EnumString, Display, Serialize, Deserialize, Clone, Copy,
+)]
 pub enum LeaderboardOrdering {
     LocalScore,
     GlobalScore,
@@ -25,15 +27,15 @@ pub struct GuildConfig {
 
 #[derive(Serialize, Deserialize)]
 pub struct DailyLeaderboardConfig {
-    pub guild_id: String,
-    pub hour: Option<isize>,
+    pub guild_id: GuildId,
+    pub hour: Option<usize>,
     pub ordering: LeaderboardOrdering,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct DailyPuzzleConfig {
-    pub guild_id: String,
-    pub hour: Option<isize>,
+    pub guild_id: GuildId,
+    pub hour: Option<usize>,
 }
 
 #[derive(Serialize, Deserialize)]

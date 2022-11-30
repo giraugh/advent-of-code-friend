@@ -45,8 +45,8 @@ pub async fn run(
     config.daily_leaderboard_configs.insert(
         options.channel.id,
         DailyLeaderboardConfig {
-            guild_id: interaction.guild_id.expect("guild id").to_string(),
-            hour: options.hour,
+            guild_id: interaction.guild_id.expect("guild id"),
+            hour: options.hour.map(|h| h as usize),
             ordering: options.ordering,
         },
     );

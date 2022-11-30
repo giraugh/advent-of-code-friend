@@ -39,8 +39,8 @@ pub async fn run(
     config.daily_puzzle_configs.insert(
         options.channel.id,
         DailyPuzzleConfig {
-            guild_id: interaction.guild_id.expect("guild id").to_string(),
-            hour: options.hour,
+            guild_id: interaction.guild_id.expect("guild id"),
+            hour: options.hour.map(|h| h as usize),
         },
     );
 
