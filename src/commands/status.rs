@@ -8,12 +8,17 @@ use serenity::model::prelude::interaction::application_command::ApplicationComma
 use serenity::model::prelude::ChannelId;
 use serenity::prelude::Context;
 
-// TODO: @ewan can this be an impl on String somehow?
-fn not_empty_or(value: String, or: &str) -> String {
-    if value.is_empty() {
-        or.to_string()
-    } else {
-        value
+trait NotEmptyOr {
+    fn not_empty_or(self, or: &str) -> Self;
+}
+
+impl NotEmptyOr for String {
+    fn not_empty_or(self, or: &str) -> Self {
+        if self.is_empty() {
+            or.to_string()
+        } else {
+            self
+        }
     }
 }
 
@@ -53,38 +58,34 @@ pub async fn run(_bot: &Bot, ctx: &Context, command: &ApplicationCommandInteract
                         })
                         .field(
                             "Daily Leaderboards",
-                            not_empty_or(
-                                daily_leaderboard_configs
-                                    .iter()
-                                    .map(|config| {
-                                        format!(
-                                            "<#{}> at {:0>2}:00",
-                                            config.0,
-                                            config.1.hour.unwrap_or(0)
-                                        )
-                                    })
-                                    .collect::<Vec<String>>()
-                                    .join("\n"),
-                                "There are no daily leaderboards set up",
-                            ),
+                            daily_leaderboard_configs
+                                .iter()
+                                .map(|config| {
+                                    format!(
+                                        "<#{}> at {:0>2}:00",
+                                        config.0,
+                                        config.1.hour.unwrap_or(0)
+                                    )
+                                })
+                                .collect::<Vec<String>>()
+                                .join("\n")
+                                .not_empty_or("There are no daily leaderboards set up"),
                             false,
                         )
                         .field(
                             "Daily Puzzles",
-                            not_empty_or(
-                                daily_puzzle_configs
-                                    .iter()
-                                    .map(|config| {
-                                        format!(
-                                            "<#{}> at {:0>2}:00",
-                                            config.0,
-                                            config.1.hour.unwrap_or(0)
-                                        )
-                                    })
-                                    .collect::<Vec<String>>()
-                                    .join("\n"),
-                                "There are no daily puzzles set up",
-                            ),
+                            daily_puzzle_configs
+                                .iter()
+                                .map(|config| {
+                                    format!(
+                                        "<#{}> at {:0>2}:00",
+                                        config.0,
+                                        config.1.hour.unwrap_or(0)
+                                    )
+                                })
+                                .collect::<Vec<String>>()
+                                .join("\n")
+                                .not_empty_or("There are no daily puzzles set up"),
                             false,
                         )
                         .color(EMBED_COLOR)
