@@ -8,6 +8,7 @@ use crate::{
 };
 
 pub const EMBED_COLOR: i32 = 0xFFFE60;
+const MAX_NAME_LENGTH: usize = 30;
 
 macro_rules! trunc {
     ($s:expr, $n: expr) => {{
@@ -55,10 +56,16 @@ pub fn leaderboard_embed_content(
     // Get longest name
     let longest_name_len = members
         .iter()
-        .map(|member| member.name.len())
+        .map(|member| {
+            member
+                .name
+                .to_owned()
+                .unwrap_or(format!("Anon #{}", member.id))
+                .len()
+        })
         .max()
-        .unwrap_or(20)
-        .min(20);
+        .unwrap_or(MAX_NAME_LENGTH)
+        .min(MAX_NAME_LENGTH);
 
     // Sort them
     members.sort_by(|a, b| match ordering {
@@ -87,7 +94,13 @@ pub fn leaderboard_embed_content(
                 ),
                 format_args!(
                     "{:width$}",
-                    trunc!(member.name, 20),
+                    trunc!(
+                        member
+                            .name
+                            .to_owned()
+                            .unwrap_or(format!("Anon #{}", member.id)),
+                        MAX_NAME_LENGTH
+                    ),
                     width = longest_name_len
                 ),
                 format_args!("{:0>2}", member.local_score),

@@ -84,7 +84,7 @@ pub struct Leaderboard {
 #[derive(Deserialize)]
 pub struct LeaderboardMember {
     /// Name of user
-    pub name: String,
+    pub name: Option<String>,
 
     /// Time of last star acquisition (unix seconds)
     pub last_star_ts: usize,
