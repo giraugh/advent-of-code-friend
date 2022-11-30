@@ -1,7 +1,7 @@
 use std::{sync::Arc, time::Duration};
 
 use chrono::{Datelike, FixedOffset, Timelike, Utc};
-use serenity::prelude::Context;
+use serenity::{model::prelude::Activity, prelude::Context};
 use tokio::{join, sync::Mutex};
 
 use crate::{
@@ -28,11 +28,19 @@ pub async fn daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
         log::info!("Waiting for {mins_until_hour} mins until next hour...");
         tokio::time::sleep(Duration::from_secs(60 * mins_until_hour)).await;
 
-        // It only makes sense to do this during December
+        // Is it not december yet?
         if time.month() != 12 {
-            // TODO: technically this could wait until December
+            // Set our activity
+            ctx.set_activity(Activity::playing("Waiting for Advent of Code"))
+                .await;
+
+            // Keep waiting...
             continue;
         }
+
+        // Set our activity
+        ctx.set_activity(Activity::playing(format!("Advent of Code Day {}", day)))
+            .await;
 
         // Get config
         let config = Config::get().expect("Failed to get config");
