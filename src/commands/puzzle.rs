@@ -1,4 +1,4 @@
-use chrono::{Datelike, Utc};
+use chrono::{Datelike, FixedOffset, Utc};
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::prelude::Context;
@@ -8,6 +8,7 @@ use serenity::{
 };
 
 use crate::bot::Bot;
+use crate::daily::EST_SECS;
 use crate::format::{make_message_embed, make_puzzle_embed, ResponseReason};
 
 use super::{extract_int_option, CommandOptions};
@@ -34,7 +35,10 @@ pub async fn run(_bot: &Bot, ctx: &Context, command: &ApplicationCommandInteract
     let options = PuzzleCommandOptions::from_options_list(&command.data.options);
 
     // Get current year
-    let year = Utc::now().year() as usize;
+    let tz = FixedOffset::east_opt(EST_SECS).unwrap();
+    let time = Utc::now().with_timezone(&tz);
+    let year = time.year() as usize;
+    let day = time.day() as usize;
 
     // Respond
     command
@@ -61,7 +65,7 @@ pub async fn run(_bot: &Bot, ctx: &Context, command: &ApplicationCommandInteract
                 } else {
                     message.add_embed(make_puzzle_embed(
                         options.year,
-                        options.day.unwrap_or(year),
+                        options.day.unwrap_or(day),
                         false,
                     ))
                 }

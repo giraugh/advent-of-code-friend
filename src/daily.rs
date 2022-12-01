@@ -1,4 +1,4 @@
-use std::{sync::Arc, time::Duration};
+use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use chrono::{Datelike, FixedOffset, Timelike, Utc};
 use serenity::{model::prelude::Activity, prelude::Context};
@@ -10,7 +10,7 @@ use crate::{
     format::{make_leaderboard_embed, make_puzzle_embed},
 };
 
-const EST_SECS: i32 = -5 * 60 * 60;
+pub const EST_SECS: i32 = -5 * 60 * 60;
 
 pub async fn daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
     // Create EST timezone
@@ -27,6 +27,8 @@ pub async fn daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
 
         // Is it not december yet?
         if time.month() != 12 {
+            log::info!("Not December, skipping daily posts");
+
             // Set our activity
             ctx.set_activity(Activity::playing("Waiting for Advent of Code"))
                 .await;
@@ -39,6 +41,10 @@ pub async fn daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
         let year = time.year() as usize;
         let day = time.day() as usize;
         let hour = time.hour() as usize;
+        log::info!(
+            "The current EST time is {}",
+            time.format("[%Y-%m-%d][%H:%M:%S]")
+        );
 
         // Set our activity
         ctx.set_activity(Activity::playing(format!("Advent of Code Day {}", day)))
@@ -57,26 +63,29 @@ pub async fn daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
 pub async fn post_daily_leaderboards(
     ctx: &Context,
     config: &Config,
-    current_year: usize,
-    current_hour: usize,
+    year: usize,
+    hour: usize,
     aoc_data: Arc<Mutex<AOCData>>,
 ) {
     // Get data
     let mut aoc_data = aoc_data.lock().await;
 
-    // Post embeds
-    for (channel_id, lb_config) in &config.daily_leaderboard_configs {
-        // Is it the right hour?
-        if lb_config.hour != current_hour {
-            continue;
-        }
+    // Get configs to be posted this hour
+    let current_configs: HashMap<_, _> = config
+        .daily_leaderboard_configs
+        .iter()
+        .filter(|config| config.1.hour == hour)
+        .collect();
+    log::info!("Found {} leaderboards to be posted", current_configs.len());
 
+    // Post embeds
+    for (channel_id, lb_config) in current_configs {
         // Get guild config
         if let Some(guild_config) = config.guild_configs.get(&lb_config.guild_id) {
             // Get leaderboard
             let leaderboard = aoc_data
                 .get_leaderboard(
-                    &current_year.to_string(),
+                    &year.to_string(),
                     &guild_config.leaderboard_id,
                     &guild_config.session_token,
                 )
@@ -100,13 +109,16 @@ pub async fn post_daily_puzzles(
     day: usize,
     hour: usize,
 ) {
-    // Post embeds
-    for (channel_id, pz_config) in &config.daily_puzzle_configs {
-        // Is it the right hour?
-        if pz_config.hour != hour {
-            continue;
-        }
+    // Get configs to be posted this hour
+    let current_configs: HashMap<_, _> = config
+        .daily_puzzle_configs
+        .iter()
+        .filter(|config| config.1.hour == hour)
+        .collect();
+    log::info!("Found {} puzzles to be posted", current_configs.len());
 
+    // Post embeds
+    for channel_id in current_configs.keys() {
         // Create and send embed
         let embed = make_puzzle_embed(year, day, true);
         channel_id

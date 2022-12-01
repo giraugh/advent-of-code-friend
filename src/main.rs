@@ -31,19 +31,36 @@ fn init_logging() {
     // Init logging
     let log_colors = ColoredLevelConfig::new()
         .info(Color::Green)
-        .warn(Color::Yellow);
+        .warn(Color::Yellow)
+        .error(Color::Red);
     fern::Dispatch::new()
-        .format(move |out, message, record| {
-            out.finish(format_args!(
-                "[{}][{}] {}",
-                log_colors.color(record.level()),
-                record.target(),
-                message,
-            ))
-        })
         .level(log::LevelFilter::Error)
         .level_for("advent_of_code_friend", log::LevelFilter::Info)
-        .chain(std::io::stdout())
+        .chain(
+            fern::Dispatch::new()
+                .format(move |out, message, record| {
+                    out.finish(format_args!(
+                        "[{}][{}] {}",
+                        log_colors.color(record.level()),
+                        record.target(),
+                        message,
+                    ))
+                })
+                .chain(std::io::stdout()),
+        )
+        .chain(
+            fern::Dispatch::new()
+                .format(move |out, message, record| {
+                    out.finish(format_args!(
+                        "{}[{}][{}] {}",
+                        chrono::Local::now().format("[%Y-%m-%d][%H:%M:%S]"),
+                        record.level(),
+                        record.target(),
+                        message,
+                    ))
+                })
+                .chain(fern::log_file("aoc-friend.log").unwrap()),
+        )
         .apply()
         .unwrap();
 }
