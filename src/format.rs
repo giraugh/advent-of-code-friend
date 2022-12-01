@@ -79,7 +79,7 @@ pub fn leaderboard_embed_content(
         },
         // Stars (ties broken by who got the most recent star first)
         LeaderboardOrdering::Stars => match b.stars.cmp(&a.stars) {
-            std::cmp::Ordering::Equal => b.last_star_ts.cmp(&a.last_star_ts),
+            std::cmp::Ordering::Equal => a.last_star_ts.cmp(&b.last_star_ts),
             x => x,
         },
     });
