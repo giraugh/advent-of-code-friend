@@ -38,6 +38,7 @@ pub async fn daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
         }
 
         // Get the current time after waiting
+        let time = Utc::now().with_timezone(&tz);
         let year = time.year() as usize;
         let day = time.day() as usize;
         let hour = time.hour() as usize;
