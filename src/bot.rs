@@ -55,6 +55,7 @@ impl Bot {
                     &year.to_string(),
                     &guild_config.leaderboard_id,
                     &guild_config.session_token,
+                    false,
                 )
                 .await
         };

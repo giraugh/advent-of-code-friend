@@ -89,6 +89,7 @@ pub async fn post_daily_leaderboards(
                     &year.to_string(),
                     &guild_config.leaderboard_id,
                     &guild_config.session_token,
+                    false,
                 )
                 .await
                 .expect("Failed to get leaderboard");

@@ -1,6 +1,7 @@
 use crate::bot::Bot;
 use crate::config::{Config, GuildConfig};
 use crate::format::{make_message_embed, ResponseReason};
+use chrono::{Datelike, Utc};
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::{
@@ -26,13 +27,39 @@ impl CommandOptions for RegisterCommandOptions {
     }
 }
 
-pub async fn run(_bot: &Bot, ctx: &Context, command: &ApplicationCommandInteraction) {
+pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteraction) {
     // Parse options
     let options = RegisterCommandOptions::from_options_list(&command.data.options);
 
-    // Save data
-    // TODO: Try fetching leaderboard and fail if it doesn't exist
     let mut config = Config::get().expect("Failed to load config");
+
+    // Try fetching leaderboard and fail if it doesn't exist
+    let can_fetch_leaderboard = {
+        let mut aoc_data = bot.aoc_data.lock().await;
+        aoc_data
+            .get_leaderboard(
+                &Utc::now().year().to_string(),
+                &options.leaderboard_id,
+                &options.session_token,
+                true,
+            )
+            .await
+            .is_ok()
+    };
+
+    if !can_fetch_leaderboard {
+        command.create_interaction_response(&ctx.http, |response| {
+            response.interaction_response_data(|message| {
+                message.ephemeral(true).add_embed(make_message_embed(
+                    ResponseReason::Error,
+                    "Something went wrong while trying to fetch that leaderboard. Please check your session token and leaderboard ID are correct and try again.",
+                ))
+            })
+        }).await.expect("to repond to command");
+        return;
+    }
+
+    // Save data
     config.guild_configs.insert(
         command.guild_id.expect("Expected guild ID"),
         GuildConfig {
