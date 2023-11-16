@@ -1,3 +1,4 @@
+use std::fmt::Write;
 use std::sync::Arc;
 
 use serenity::builder::CreateEmbed;
@@ -83,9 +84,10 @@ pub fn leaderboard_embed_content(
     let content: String = members
         .iter()
         .enumerate()
-        .map(|(i, member)| {
-            format!(
-                "{}: {}  {} {}\n",
+        .fold(String::new(), |mut out, (i, member)| {
+            let _ = writeln!(
+                out,
+                "{}: {}  {} {}",
                 format_args!(
                     "{:0>width$}",
                     i + 1,
@@ -119,9 +121,9 @@ pub fn leaderboard_embed_content(
                     LeaderboardOrdering::Stars => "⭐️",
                     _ => "💎",
                 },
-            )
-        })
-        .collect();
+            );
+            out
+        });
 
     format!("```js\n{}```", content)
 }
