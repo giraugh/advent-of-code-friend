@@ -47,11 +47,7 @@ pub fn leaderboard_embed_content(
     ordering: LeaderboardOrdering,
 ) -> String {
     // Collect member entries
-    let mut members: Vec<_> = leaderboard
-        .members
-        .iter()
-        .map(|(_, member)| member)
-        .collect();
+    let mut members: Vec<_> = leaderboard.members.values().collect();
 
     // Get longest name
     let longest_name_len = members
