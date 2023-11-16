@@ -4,7 +4,7 @@ use std::sync::Arc;
 use serenity::builder::CreateEmbed;
 
 use crate::{
-    aoc::{Leaderboard, LeaderboardCacheEntry},
+    aoc::{Leaderboard, LeaderboardCacheEntry, PuzzleDetails},
     config::LeaderboardOrdering,
 };
 
@@ -128,14 +128,22 @@ pub fn leaderboard_embed_content(
     format!("```js\n{}```", content)
 }
 
-pub fn make_puzzle_embed(year: usize, day: usize, new: bool) -> CreateEmbed {
+pub fn make_puzzle_embed(
+    year: usize,
+    day: usize,
+    details: Option<PuzzleDetails>,
+    new: bool,
+) -> CreateEmbed {
     let puzzle_url = generate_puzzle_url(year, day);
 
+    let title_prefix = if new { "🎁  New Puzzle:" } else { "🧩 " };
+    let title = match details {
+        Some(PuzzleDetails { name }) => format!("{title_prefix} {name} (Day {day}, {year})"),
+        None => format!("{title_prefix} Day {day}, {year}"),
+    };
+
     CreateEmbed::default()
-        .title(format!(
-            "{} Day {day}, {year}",
-            if new { "🎁  New Puzzle:" } else { "🧩 " }
-        )) // TODO: Scrape name of puzzle from the page
+        .title(title)
         .description(&puzzle_url)
         .url(&puzzle_url)
         .color(EMBED_COLOR)
