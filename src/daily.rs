@@ -56,7 +56,7 @@ pub async fn daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
 
         // Post embeds
         let lb_task = post_daily_leaderboards(&ctx, &config, year, hour, aoc_data.clone());
-        let pz_task = post_daily_puzzles(&ctx, &config, year, day, hour);
+        let pz_task = post_daily_puzzles(&ctx, &config, year, day, hour, aoc_data.clone());
         join!(lb_task, pz_task);
     }
 }
@@ -109,6 +109,7 @@ pub async fn post_daily_puzzles(
     year: usize,
     day: usize,
     hour: usize,
+    aoc_data: Arc<Mutex<AOCData>>,
 ) {
     // Get configs to be posted this hour
     let current_configs: HashMap<_, _> = config
@@ -118,10 +119,16 @@ pub async fn post_daily_puzzles(
         .collect();
     log::info!("Found {} puzzles to be posted", current_configs.len());
 
+    let puzzle_details = {
+        let mut aoc_data = aoc_data.lock().await;
+        aoc_data.get_puzzle_details(year, day).await
+    }
+    .ok();
+
     // Post embeds
     for channel_id in current_configs.keys() {
         // Create and send embed
-        let embed = make_puzzle_embed(year, day, true);
+        let embed = make_puzzle_embed(year, day, puzzle_details.clone(), true);
         channel_id
             .send_message(&ctx.http, |message| message.set_embed(embed))
             .await
