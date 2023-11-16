@@ -30,7 +30,7 @@ impl CommandOptions for PuzzleCommandOptions {
 }
 // Command //
 
-pub async fn run(_bot: &Bot, ctx: &Context, command: &ApplicationCommandInteraction) {
+pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteraction) {
     // Parse options
     let options = PuzzleCommandOptions::from_options_list(&command.data.options);
 
@@ -40,39 +40,54 @@ pub async fn run(_bot: &Bot, ctx: &Context, command: &ApplicationCommandInteract
     let year = time.year() as usize;
     let day = time.day() as usize;
 
-    // Respond
-    command
-        .create_interaction_response(&ctx.http, |response| {
-            response.interaction_response_data(|message| {
-                if Utc::now().month() != 12 && options.year == year {
-                    message.ephemeral(true).add_embed(make_message_embed(
-                        ResponseReason::Error,
-                        &format!(
-                            "It's not yet December, please specify a year between 2015 and {}",
-                            year - 1,
-                        ),
-                    ))
-                } else if options.year > year {
-                    message.ephemeral(true).add_embed(make_message_embed(
-                        ResponseReason::Error,
-                        "You can't use a year in the future 🗞️",
-                    ))
-                } else if options.day.is_none() && options.year != year {
-                    message.ephemeral(true).add_embed(make_message_embed(
-                        ResponseReason::Error,
-                        "When using a previous year, you must also specify a day",
-                    ))
-                } else {
-                    message.add_embed(make_puzzle_embed(
-                        options.year,
-                        options.day.unwrap_or(day),
-                        false,
-                    ))
-                }
+    let error = if Utc::now().month() != 12 && options.year == year {
+        Some(format!(
+            "It's not yet December, please specify a year between 2015 and {}",
+            year - 1,
+        ))
+    } else if options.year > year {
+        Some("You can't use a year in the future 🗞️".to_owned())
+    } else if options.day.is_none() && options.year != year {
+        Some("When using a previous year, you must also specify a day".to_owned())
+    } else {
+        None
+    };
+
+    if let Some(error_str) = error {
+        command
+            .create_interaction_response(&ctx.http, |response| {
+                response.interaction_response_data(|message| {
+                    message
+                        .ephemeral(true)
+                        .add_embed(make_message_embed(ResponseReason::Error, &error_str))
+                })
             })
-        })
-        .await
-        .expect("failed to create interaction response");
+            .await
+            .expect("failed to create interaction response");
+    } else {
+        // Defer response
+        command.defer(&ctx.http).await.unwrap();
+
+        let puzzle_details = {
+            let mut aoc_data = bot.aoc_data.lock().await;
+            aoc_data
+                .get_puzzle_details(options.year, options.day.unwrap_or(day))
+                .await
+        }
+        .ok();
+
+        command
+            .create_followup_message(&ctx.http, |message| {
+                message.add_embed(make_puzzle_embed(
+                    options.year,
+                    options.day.unwrap_or(day),
+                    puzzle_details,
+                    false,
+                ))
+            })
+            .await
+            .expect("failed to create interaction response");
+    };
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
