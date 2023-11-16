@@ -9,8 +9,6 @@ use reqwest::Client;
 pub use leaderboard::{fetch_leaderboard, Leaderboard, LeaderboardCacheEntry, LeaderboardCacheKey};
 pub use puzzle::{fetch_puzzle_details, PuzzleDetails, PuzzleKey};
 
-use self::leaderboard::fetch_leaderboard;
-
 const CACHE_TTL_SECS: i64 = 900;
 
 pub struct AOCData {
