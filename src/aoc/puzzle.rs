@@ -11,7 +11,7 @@ pub type PuzzleKey = (usize, usize);
 #[derive(Debug, Clone, Deserialize)]
 pub struct PuzzleDetails {
     /// Name of the puzzle
-    name: String,
+    pub name: String,
 }
 
 pub async fn fetch_puzzle_details(
@@ -31,8 +31,6 @@ pub async fn fetch_puzzle_details(
     let html = res.text().await?;
     let dom = tl::parse(&html, tl::ParserOptions::default())?;
     let parser = dom.parser();
-
-    dbg!(&html);
 
     // Get the heading name from the <h2/>
     let heading_handle = dom
