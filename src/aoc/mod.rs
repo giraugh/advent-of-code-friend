@@ -9,6 +9,17 @@ const CACHE_TTL_SECS: i64 = 900;
 pub struct AOCData {
     leaderboards: HashMap<LeaderboardCacheKey, Arc<LeaderboardCacheEntry>>,
     http_client: Client,
+    puzzles: HashMap<PuzzleKey, PuzzleDetails>,
+}
+
+/// Unique identifier for a puzzle, consists of (year, day)
+pub type PuzzleKey = (usize, usize);
+
+/// Data associated with a puzzle
+#[derive(Debug, Clone)]
+pub struct PuzzleDetails {
+    /// Name of the puzzle
+    name: String,
 }
 
 #[derive(PartialEq, Eq, Hash, Clone)]
@@ -39,6 +50,25 @@ impl AOCData {
         Self {
             http_client: reqwest::Client::new(),
             leaderboards: HashMap::new(),
+            puzzles: HashMap::new(),
+        }
+    }
+
+    pub async fn get_puzzle_details(
+        &mut self,
+        year: usize,
+        day: usize,
+    ) -> Result<PuzzleDetails, Box<dyn Error>> {
+        let key = (year, day);
+        match self.puzzles.get(&key) {
+            Some(puzzle) => Ok(puzzle.clone()),
+            _ => {
+                let puzzle_details = fetch_puzzle_details(&self.http_client, year, day).await;
+                puzzle_details.map(|pd| {
+                    self.puzzles.insert(key, pd.clone());
+                    pd
+                })
+            }
         }
     }
 
@@ -110,6 +140,14 @@ pub struct LeaderboardMember {
 pub struct CompletionDayLevelEntry {
     star_index: usize,
     get_star_ts: usize,
+}
+
+async fn fetch_puzzle_details(
+    client: &reqwest::Client,
+    year: usize,
+    day: usize,
+) -> Result<PuzzleDetails, Box<dyn Error>> {
+    todo!()
 }
 
 async fn fetch_leaderboard(
