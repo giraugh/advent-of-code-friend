@@ -79,7 +79,7 @@ pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteracti
                 .create_followup_message(&ctx.http, |message| {
                     message.add_embed(make_message_embed(
                         ResponseReason::Error,
-                        &format!("Failed to get leaderboard: {}", error),
+                        &format!("Failed to get leaderboard: {}\n\nYour session token may have expired. Please try rerunning `/register` with a fresh token.", error),
                     ))
                 })
                 .await

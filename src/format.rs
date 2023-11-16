@@ -1,3 +1,4 @@
+use std::fmt::Write;
 use std::sync::Arc;
 
 use serenity::builder::CreateEmbed;
@@ -63,6 +64,17 @@ pub fn leaderboard_embed_content(
         .unwrap_or(MAX_NAME_LENGTH)
         .min(MAX_NAME_LENGTH);
 
+    // Get longest score
+    let longest_score_len = members
+        .iter()
+        .map(|member| match ordering {
+            LeaderboardOrdering::LocalScore => member.local_score.to_string().len(),
+            LeaderboardOrdering::GlobalScore => member.global_score.to_string().len(),
+            LeaderboardOrdering::Stars => member.stars.to_string().len(),
+        })
+        .max()
+        .unwrap_or(2);
+
     // Sort them
     // TODO: sort_by should be stable, but appears to reorder equal elements?
     members.sort_by(|a, b| match ordering {
@@ -83,9 +95,10 @@ pub fn leaderboard_embed_content(
     let content: String = members
         .iter()
         .enumerate()
-        .map(|(i, member)| {
-            format!(
-                "{}: {}  {} {}\n",
+        .fold(String::new(), |mut out, (i, member)| {
+            let _ = writeln!(
+                out,
+                "{}: {}  {} {}",
                 format_args!(
                     "{:0>width$}",
                     i + 1,
@@ -107,21 +120,21 @@ pub fn leaderboard_embed_content(
                     width = longest_name_len,
                 ),
                 format_args!(
-                    "{:0>width$}",
+                    "{: >width$}",
                     match ordering {
                         LeaderboardOrdering::LocalScore => member.local_score,
                         LeaderboardOrdering::GlobalScore => member.global_score,
                         LeaderboardOrdering::Stars => member.stars,
                     },
-                    width = 2, // TODO: Base this on the largest score being used
+                    width = longest_score_len,
                 ),
                 match ordering {
                     LeaderboardOrdering::Stars => "⭐️",
                     _ => "💎",
                 },
-            )
-        })
-        .collect();
+            );
+            out
+        });
 
     format!("```js\n{}```", content)
 }

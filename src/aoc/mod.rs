@@ -49,11 +49,12 @@ impl AOCData {
         event_id: &str,
         leaderboard_id: &str,
         session_token: &str,
+        skip_cache: bool,
     ) -> Result<Arc<LeaderboardCacheEntry>, Box<dyn Error>> {
         let key = LeaderboardCacheKey::new(event_id, leaderboard_id);
         match self.leaderboards.get(&key) {
             // If we have an unexpired cache entry, return it
-            Some(entry) if !entry.is_expired() => Ok(entry.clone()),
+            Some(entry) if !entry.is_expired() && !skip_cache => Ok(entry.clone()),
 
             // Otherwise, fetch and then cache it
             _ => fetch_leaderboard(&self.http_client, event_id, leaderboard_id, session_token)
