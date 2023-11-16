@@ -3,7 +3,8 @@ use serenity::{
     model::{gateway::Ready, id::GuildId, prelude::interaction::Interaction},
     prelude::*,
 };
-use std::{env, sync::Arc};
+use std::{cell::RefCell, env, sync::Arc};
+use tokio::task::JoinHandle;
 
 use crate::{
     aoc::{AOCData, LeaderboardCacheEntry},
@@ -14,16 +15,16 @@ use crate::{
 
 pub struct Bot {
     pub aoc_data: Arc<Mutex<AOCData>>,
+    pub daily_thread: Mutex<RefCell<Option<JoinHandle<()>>>>,
 }
 
 impl Bot {
     pub async fn start(token: String) {
-        // Create bot data
-
         // Create client
         let mut client = Client::builder(token, GatewayIntents::empty())
             .event_handler(Bot {
                 aoc_data: Arc::new(Mutex::new(AOCData::new())),
+                daily_thread: Mutex::new(RefCell::new(None)),
             })
             .await
             .expect("to create client");
@@ -86,9 +87,6 @@ impl EventHandler for Bot {
             ready.user.discriminator
         );
 
-        // Start daily posting thread
-        let daily_thread = tokio::spawn(daily::daily_posts(self.aoc_data.clone(), ctx.clone()));
-
         // For now, we will register local commands, to do so get the guild id
         let guild_id = GuildId(
             env::var("GUILD_ID")
@@ -111,7 +109,13 @@ impl EventHandler for Bot {
         .await
         .expect("to have created guild commands");
 
-        // Wait for threads
+        // Start daily posting thread
+        let mut daily_thread = self.daily_thread.lock().await;
+        let daily_thread = daily_thread.get_mut();
+        let daily_thread = daily_thread.get_or_insert(tokio::spawn(daily::daily_posts(
+            self.aoc_data.clone(),
+            ctx.clone(),
+        )));
         daily_thread.await.unwrap();
     }
 }
