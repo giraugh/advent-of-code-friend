@@ -25,6 +25,10 @@ pub async fn daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
         log::info!("Waiting for {mins_until_hour} mins until next hour...");
         tokio::time::sleep(Duration::from_secs(60 * mins_until_hour)).await;
 
+        // Get the current time after waiting
+        let time = Utc::now().with_timezone(&tz);
+        let year = time.year() as usize;
+
         // Is it not december yet?
         if time.month() != 12 {
             log::info!("Not December, skipping daily posts");
@@ -37,9 +41,6 @@ pub async fn daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
             continue;
         }
 
-        // Get the current time after waiting
-        let time = Utc::now().with_timezone(&tz);
-        let year = time.year() as usize;
         let day = time.day() as usize;
         let hour = time.hour() as usize;
         log::info!(
