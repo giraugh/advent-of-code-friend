@@ -23,6 +23,11 @@ builder:
     options: mode=max
     image: advent-of-code-friend-cache
 
+env:
+  secret:
+    - DISCORD_TOKEN
+    - GUILD_ID
+
 # Use a different ssh user than root
 ssh:
   user: alien
