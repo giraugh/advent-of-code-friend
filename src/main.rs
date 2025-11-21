@@ -18,7 +18,7 @@ async fn main() {
     dotenv().ok();
 
     // Get the token from the env
-    let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
+    let token = env::var("DISCORD_TOKEN").expect("Expected a discord token in the environment");
 
     // Start discord bot task
     let bot_thread = tokio::spawn(Bot::start(token));

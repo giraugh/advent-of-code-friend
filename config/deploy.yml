@@ -1,0 +1,41 @@
+# Name of your application. Used to uniquely configure containers.
+service: advent-of-code-friend
+
+# Name of the container image.
+image: giraugh/advent-of-code-friend
+
+# Deploy to these servers.
+servers:
+  web:
+    hosts:
+      - abduction_.giraugh.xyz
+    proxy: false
+
+# Credentials for your image host.
+registry:
+  server: ghcr.io
+  username: giraugh
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+# Configure builder setup.
+builder:
+  arch: amd64
+  cache:
+    type: gha
+    options: mode=max
+    image: advent-of-code-friend-cache
+
+env:
+  secret:
+    - DISCORD_TOKEN
+    - GUILD_ID
+
+# Use a different ssh user than root
+ssh:
+  user: alien
+  keys: ["~/.ssh/abduction-alien.pem"]
+
+# Use a persistent storage volume.
+volumes:
+  - "/data/advent-of-code-friend:/data"
