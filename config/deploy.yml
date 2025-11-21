@@ -6,7 +6,10 @@ image: giraugh/advent-of-code-friend
 
 # Deploy to these servers.
 servers:
-  - abduction_.giraugh.xyz
+  web:
+    hosts:
+      - abduction_.giraugh.xyz
+    proxy: false
 
 # Credentials for your image host.
 registry:
