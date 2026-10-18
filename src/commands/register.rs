@@ -1,11 +1,11 @@
 use crate::bot::Bot;
+use crate::commands::make_error_response;
 use crate::config::{Config, GuildConfig};
 use crate::format::{make_message_embed, ResponseReason};
 use chrono::{Datelike, Utc};
-use serenity::builder::CreateApplicationCommand;
-use serenity::model::prelude::command::CommandOptionType;
-use serenity::model::prelude::interaction::application_command::{
-    ApplicationCommandInteraction, CommandDataOption,
+use serenity::all::{
+    CommandDataOption, CommandInteraction, CommandOptionType, CreateCommand, CreateCommandOption,
+    CreateInteractionResponse, CreateInteractionResponseMessage,
 };
 use serenity::prelude::Context;
 
@@ -27,10 +27,9 @@ impl CommandOptions for RegisterCommandOptions {
     }
 }
 
-pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteraction) {
+pub async fn run(bot: &Bot, ctx: &Context, command: &CommandInteraction) {
     // Parse options
     let options = RegisterCommandOptions::from_options_list(&command.data.options);
-
     let mut config = Config::get().expect("Failed to load config");
 
     // Try fetching leaderboard and fail if it doesn't exist
@@ -48,14 +47,14 @@ pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteracti
     };
 
     if !can_fetch_leaderboard {
-        command.create_interaction_response(&ctx.http, |response| {
-            response.interaction_response_data(|message| {
-                message.ephemeral(true).add_embed(make_message_embed(
-                    ResponseReason::Error,
-                    "Something went wrong while trying to fetch that leaderboard. Please check your session token and leaderboard ID are correct and try again.",
-                ))
-            })
-        }).await.expect("to repond to command");
+        command.create_response(
+            &ctx.http,
+            make_error_response(
+                "Something went wrong while trying to fetch that leaderboard. Please check your session token and leaderboard ID are correct then try again."
+            )
+        )
+            .await
+            .expect("To create error response");
         return;
     }
 
@@ -70,34 +69,38 @@ pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteracti
 
     // Respond
     command
-        .create_interaction_response(&ctx.http, |response| {
-            response.interaction_response_data(|message| {
-                message.ephemeral(true).add_embed(make_message_embed(
-                    ResponseReason::Success,
-                    "Successfully registered your leaderboard to this server. You can now set up daily announcements and run `/leaderboard`.\n\nRun this command again to change the registration details, or use `/unregister` to remove this registration.",
-                ))
-            })
-        })
+        .create_response(
+            &ctx.http,
+            CreateInteractionResponse::Message(
+                CreateInteractionResponseMessage::new()
+                    .ephemeral(true)
+                    .add_embed(make_message_embed(
+                        ResponseReason::Success,
+                        "Successfully registered your leaderboard to this server. You can now set up daily announcements and run `/leaderboard`.\n\nRun this command again to change the registration details, or use `/unregister` to remove this registration."
+                    ))
+            ),
+        )
         .await
         .expect("to respond to command");
 }
 
-pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
-    command
-        .name("register")
+pub fn command_builder() -> CreateCommand {
+    CreateCommand::new("register")
         .description("Bind a session token and leaderboard ID to this server")
-        .create_option(|option| {
-            option
-                .name("session_token")
-                .description("Your AoC session cookie (valid for approx. 30 days)")
-                .kind(CommandOptionType::String)
-                .required(true)
-        })
-        .create_option(|option| {
-            option
-                .name("leaderboard_id")
-                .description("Can be found at the end of a private leaderboard page URL")
-                .kind(CommandOptionType::String)
-                .required(true)
-        })
+        .add_option(
+            CreateCommandOption::new(
+                CommandOptionType::String,
+                "session_token",
+                "Your AoC session cookie (Valid for approx 30 days",
+            )
+            .required(true),
+        )
+        .add_option(
+            CreateCommandOption::new(
+                CommandOptionType::String,
+                "leaderboard_id",
+                "Can be found at the enf of a private leaderboard page URL",
+            )
+            .required(true),
+        )
 }

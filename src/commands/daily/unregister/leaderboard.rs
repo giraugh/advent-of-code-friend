@@ -1,18 +1,16 @@
 use crate::bot::Bot;
 use crate::config::Config;
 use crate::format::{make_message_embed, ResponseReason};
-use serenity::builder::CreateApplicationCommandOption;
-use serenity::model::prelude::command::CommandOptionType;
-use serenity::model::prelude::interaction::application_command::{
-    ApplicationCommandInteraction, CommandDataOption,
+use serenity::all::{
+    ChannelId, CommandDataOption, CommandInteraction, CommandOptionType, CreateCommandOption,
+    CreateInteractionResponse, CreateInteractionResponseMessage,
 };
-use serenity::model::prelude::PartialChannel;
 use serenity::prelude::Context;
 
 use super::super::super::{extract_channel_option, CommandOptions};
 
 struct DailyUnregisterLeaderboardCommandOptions {
-    channel: PartialChannel,
+    channel: ChannelId,
 }
 
 impl CommandOptions for DailyUnregisterLeaderboardCommandOptions {
@@ -26,48 +24,46 @@ impl CommandOptions for DailyUnregisterLeaderboardCommandOptions {
 pub async fn run(
     _bot: &Bot,
     ctx: &Context,
-    interaction: &ApplicationCommandInteraction,
-    command: &CommandDataOption,
+    interaction: &CommandInteraction,
+    options: &[CommandDataOption],
 ) {
     // Parse options
-    let options = DailyUnregisterLeaderboardCommandOptions::from_options_list(&command.options);
+    let options = DailyUnregisterLeaderboardCommandOptions::from_options_list(options);
 
     // Save data
     let mut config = Config::get().expect("Failed to load config");
-    let removed_channel_config = config.daily_leaderboard_configs.remove(&options.channel.id);
+    let removed_channel_config = config.daily_leaderboard_configs.remove(&options.channel);
 
     // Respond
+    let message_response = CreateInteractionResponseMessage::new()
+        .ephemeral(true)
+        .add_embed(if removed_channel_config.is_some() {
+            make_message_embed(ResponseReason::Success, &format!("Successfully removed the daily leaderboard from <#{}>", options.channel))
+        } else {
+            make_message_embed(ResponseReason::Error, "There was no daily leaderboard on that channel. You can set one up with `/daily leaderboard`.")
+        });
     interaction
-        .create_interaction_response(&ctx.http, |response| {
-            response.interaction_response_data(|message| {
-                if removed_channel_config.is_some() {
-                    message.ephemeral(true).add_embed(make_message_embed(
-                        ResponseReason::Success,
-                        &format!("Successfully removed the daily leaderboard from <#{}>", options.channel.id),
-                    ))
-                } else {
-                    message.ephemeral(true).add_embed(make_message_embed(
-                        ResponseReason::Error,
-                        "There was no daily leaderboard on that channel. You can set one up with `/daily leaderboard`.",
-                    ))
-                }
-            })
-        })
+        .create_response(
+            &ctx.http,
+            CreateInteractionResponse::Message(message_response),
+        )
         .await
         .expect("to respond to command");
 }
 
-pub fn register() -> CreateApplicationCommandOption {
-    CreateApplicationCommandOption::default()
-        .name("leaderboard")
-        .description("Remove a daily leaderboard update in a specific channel")
-        .kind(CommandOptionType::SubCommand)
-        .create_sub_option(|option| {
-            option
-                .name("channel")
-                .description("Where the daily is registered")
-                .kind(CommandOptionType::Channel)
-                .required(true)
-        })
-        .to_owned()
+pub fn command_builder() -> CreateCommandOption {
+    CreateCommandOption::new(
+        CommandOptionType::SubCommand,
+        "leaderboard",
+        "Where the daily is registered",
+    )
+    .required(true)
+    .add_sub_option(
+        CreateCommandOption::new(
+            CommandOptionType::Channel,
+            "channel",
+            "Where the daily is registered",
+        )
+        .required(true),
+    )
 }

@@ -1,6 +1,7 @@
 use serenity::{
+    all::Interaction,
     async_trait,
-    model::{gateway::Ready, id::GuildId, prelude::interaction::Interaction},
+    model::{gateway::Ready, id::GuildId},
     prelude::*,
 };
 use std::{cell::RefCell, env, sync::Arc};
@@ -67,7 +68,7 @@ impl Bot {
 impl EventHandler for Bot {
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         // If this interaction is a command
-        if let Interaction::ApplicationCommand(command) = interaction {
+        if let Interaction::Command(command) = interaction {
             match command.data.name.as_str() {
                 "register" => commands::register::run(self, &ctx, &command).await,
                 "unregister" => commands::unregister::run(self, &ctx, &command).await,
@@ -82,14 +83,10 @@ impl EventHandler for Bot {
     }
 
     async fn ready(&self, ctx: Context, ready: Ready) {
-        log::info!(
-            "Bot is connected as {}#{}",
-            ready.user.name,
-            ready.user.discriminator
-        );
+        log::info!("Bot is connected as {}", ready.user.display_name(),);
 
         // For now, we will register local commands, to do so get the guild id
-        let guild_id = GuildId(
+        let guild_id = GuildId::new(
             env::var("GUILD_ID")
                 .expect("Expected GUILD_ID in environment")
                 .parse()
@@ -97,16 +94,19 @@ impl EventHandler for Bot {
         );
 
         // Setup guild commands
-        GuildId::set_application_commands(&guild_id, &ctx.http, |commmands| {
-            commmands
-                .create_application_command(commands::register::register)
-                .create_application_command(commands::unregister::register)
-                .create_application_command(commands::leaderboard::register)
-                .create_application_command(commands::puzzle::register)
-                .create_application_command(commands::daily::register)
-                .create_application_command(commands::status::register)
-                .create_application_command(commands::help::register)
-        })
+        GuildId::set_commands(
+            guild_id,
+            &ctx.http,
+            vec![
+                commands::register::command_builder(),
+                commands::unregister::command_builder(),
+                commands::status::command_builder(),
+                commands::puzzle::command_builder(),
+                commands::help::command_builder(),
+                commands::leaderboard::command_builder(),
+                commands::daily::command_builder(),
+            ],
+        )
         .await
         .expect("to have created guild commands");
 

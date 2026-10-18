@@ -19,6 +19,12 @@ pub enum LeaderboardOrdering {
     Stars,
 }
 
+impl From<LeaderboardOrdering> for String {
+    fn from(val: LeaderboardOrdering) -> Self {
+        val.to_string()
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct GuildConfig {
     pub session_token: String,

@@ -1,11 +1,9 @@
 use chrono::{Datelike, FixedOffset, Utc};
-use serenity::model::prelude::command::CommandOptionType;
-use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
-use serenity::prelude::Context;
-use serenity::{
-    builder::CreateApplicationCommand,
-    model::prelude::interaction::application_command::CommandDataOption,
+use serenity::all::{
+    CommandDataOption, CommandInteraction, CommandOptionType, CreateCommand, CreateCommandOption,
+    CreateInteractionResponse, CreateInteractionResponseFollowup, CreateInteractionResponseMessage,
 };
+use serenity::prelude::Context;
 
 use crate::bot::Bot;
 use crate::daily::EST_SECS;
@@ -30,7 +28,7 @@ impl CommandOptions for PuzzleCommandOptions {
 }
 // Command //
 
-pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteraction) {
+pub async fn run(bot: &Bot, ctx: &Context, command: &CommandInteraction) {
     // Parse options
     let options = PuzzleCommandOptions::from_options_list(&command.data.options);
 
@@ -55,13 +53,14 @@ pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteracti
 
     if let Some(error_str) = error {
         command
-            .create_interaction_response(&ctx.http, |response| {
-                response.interaction_response_data(|message| {
-                    message
+            .create_response(
+                &ctx.http,
+                CreateInteractionResponse::Message(
+                    CreateInteractionResponseMessage::new()
                         .ephemeral(true)
-                        .add_embed(make_message_embed(ResponseReason::Error, &error_str))
-                })
-            })
+                        .add_embed(make_message_embed(ResponseReason::Error, &error_str)),
+                ),
+            )
             .await
             .expect("failed to create interaction response");
     } else {
@@ -77,36 +76,38 @@ pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteracti
         .ok();
 
         command
-            .create_followup_message(&ctx.http, |message| {
-                message.add_embed(make_puzzle_embed(
+            .create_followup(
+                &ctx.http,
+                CreateInteractionResponseFollowup::new().embed(make_puzzle_embed(
                     options.year,
                     options.day.unwrap_or(day),
                     puzzle_details,
                     false,
-                ))
-            })
+                )),
+            )
             .await
             .expect("failed to create interaction response");
     };
 }
 
-pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
-    command
-        .name("puzzle")
+pub fn command_builder() -> CreateCommand {
+    CreateCommand::new("puzzle")
         .description("Posts a link to the latest puzzle (or for a day/year you choose).")
-        .create_option(|option| {
-            option
-                .name("day")
-                .description("Day of December to fetch puzzle for (defaults to latest day)")
-                .kind(CommandOptionType::Integer)
-                .min_int_value(1)
-                .max_int_value(25)
-        })
-        .create_option(|option| {
-            option
-                .name("year")
-                .description("Year to fetch puzzle for (default: current year)")
-                .kind(CommandOptionType::Integer)
-                .min_int_value(2015)
-        })
+        .add_option(
+            CreateCommandOption::new(
+                CommandOptionType::Integer,
+                "day",
+                "Day of December to fetch puzzle for (defaults to latest day)",
+            )
+            .min_int_value(1)
+            .max_int_value(25),
+        )
+        .add_option(
+            CreateCommandOption::new(
+                CommandOptionType::Integer,
+                "year",
+                "Year to fetch puzzle for (default: current year)",
+            )
+            .min_int_value(2015),
+        )
 }
