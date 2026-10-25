@@ -27,7 +27,7 @@ pub async fn wait_till_next_hour_approx<C: Clock>(clock: &mut C) {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::daily_posting::clock::{FakeClock, EST_TZ};
+    use crate::daily_posting::clock::{fake_clock::FakeClock, EST_TZ};
     use chrono::TimeZone;
 
     macro_rules! date {
