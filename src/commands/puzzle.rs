@@ -1,4 +1,4 @@
-use chrono::{Datelike, FixedOffset, Utc};
+use chrono::{Datelike, Utc};
 use serenity::all::{
     CommandDataOption, CommandInteraction, CommandOptionType, CreateCommand, CreateCommandOption,
     CreateInteractionResponse, CreateInteractionResponseFollowup, CreateInteractionResponseMessage,
@@ -6,7 +6,7 @@ use serenity::all::{
 use serenity::prelude::Context;
 
 use crate::bot::Bot;
-use crate::daily::EST_SECS;
+use crate::daily::EST_TZ;
 use crate::format::{make_message_embed, make_puzzle_embed, ResponseReason};
 
 use super::{extract_int_option, CommandOptions};
@@ -33,8 +33,7 @@ pub async fn run(bot: &Bot, ctx: &Context, command: &CommandInteraction) {
     let options = PuzzleCommandOptions::from_options_list(&command.data.options);
 
     // Get current year
-    let tz = FixedOffset::east_opt(EST_SECS).unwrap();
-    let time = Utc::now().with_timezone(&tz);
+    let time = Utc::now().with_timezone(&EST_TZ);
     let year = time.year() as usize;
     let day = time.day() as usize;
 

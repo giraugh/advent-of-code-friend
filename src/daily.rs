@@ -13,15 +13,13 @@ use crate::{
     format::{make_leaderboard_embed, make_puzzle_embed},
 };
 
-pub const EST_SECS: i32 = -5 * 60 * 60;
+const EST_SECS: i32 = -5 * 60 * 60;
+pub const EST_TZ: FixedOffset = FixedOffset::east_opt(EST_SECS).unwrap();
 
 pub async fn daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
-    // Create EST timezone
-    let tz = FixedOffset::east_opt(EST_SECS).unwrap();
-
     loop {
         // Get current time in EST
-        let time = Utc::now().with_timezone(&tz);
+        let time = Utc::now().with_timezone(&EST_TZ);
 
         // Wait until the hour
         let mins_until_hour = 60 - time.minute() as u64;
@@ -29,7 +27,7 @@ pub async fn daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
         tokio::time::sleep(Duration::from_secs(60 * mins_until_hour)).await;
 
         // Get the current time after waiting
-        let time = Utc::now().with_timezone(&tz);
+        let time = Utc::now().with_timezone(&EST_TZ);
         let year = time.year() as usize;
 
         // Is it not december yet?
