@@ -18,7 +18,7 @@ pub fn now_etc() -> DateTime<FixedOffset> {
     Utc::now().with_timezone(&EST_TZ)
 }
 
-pub async fn wait_till_next_hour_approx() -> DateTime<FixedOffset> {
+pub async fn wait_till_next_hour_approx() {
     // Get current time in EST
     let time = now_etc();
 
@@ -26,17 +26,8 @@ pub async fn wait_till_next_hour_approx() -> DateTime<FixedOffset> {
     let mins_until_hour = 60 - time.minute() as u64;
     log::info!("Waiting for {mins_until_hour} mins until next hour...");
     tokio::time::sleep(Duration::from_secs(60 * mins_until_hour)).await;
-
-    // Then wait an arbitrary random amount of extra
-    // under a minute ofc
-    // this means the puzzle will be posted,
-    // we prevent spam to AoC at start of day etc
-    // NOTE: not exactly random
-    tokio::time::sleep(Duration::from_secs(2)).await;
-
-    // Get the current time after waiting
-    now_etc()
 }
+
 #[cfg(test)]
 mod test {
     use super::*;

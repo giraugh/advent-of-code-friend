@@ -12,46 +12,46 @@ use tokio::{join, sync::Mutex};
 use crate::{
     aoc::AOCData,
     config::Config,
-    daily_posting::timing::{is_puzzle_day, wait_till_next_hour_approx},
+    daily_posting::timing::{is_puzzle_day, now_etc, wait_till_next_hour_approx},
     format::{make_leaderboard_embed, make_puzzle_embed},
 };
 
 pub async fn make_daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
     loop {
-        let time = wait_till_next_hour_approx().await;
-
-        // Is it an AOC puzzle day?
-        if !is_puzzle_day(&time) {
-            log::info!("Not a puzzle day, skipping daily posts");
-
-            // Set our activity
-            ctx.set_activity(Some(ActivityData::playing("Waiting for Advent of Code")));
-
-            // Keep waiting...
-            continue;
-        }
-
+        let time = now_etc();
         let year = time.year() as usize;
         let day = time.day() as usize;
         let hour = time.hour() as usize;
+
         log::info!(
             "The current EST time is {}",
             time.format("[%Y-%m-%d][%H:%M:%S]")
         );
 
-        // Set our activity
-        ctx.set_activity(Some(ActivityData::playing(format!(
-            "Advent of Code {year} - Day {day}",
-        ))));
+        // Is it an AOC puzzle day?
+        if is_puzzle_day(&time) {
+            // Set our activity
+            ctx.set_activity(Some(ActivityData::playing(format!(
+                "Advent of Code {year} - Day {day}",
+            ))));
 
-        // Get config
-        let config = Config::get().expect("Failed to get config");
+            // Get config
+            let config = Config::get().expect("Failed to get config");
 
-        // Post embeds
-        join!(
-            post_daily_leaderboards(&ctx, &config, year, hour, aoc_data.clone()),
-            post_daily_puzzles(&ctx, &config, year, day, hour, aoc_data.clone()),
-        );
+            // Post embeds
+            join!(
+                post_daily_leaderboards(&ctx, &config, year, hour, aoc_data.clone()),
+                post_daily_puzzles(&ctx, &config, year, day, hour, aoc_data.clone()),
+            );
+        } else {
+            log::info!("Not a puzzle day, skipping daily posts");
+
+            // Set our activity
+            ctx.set_activity(Some(ActivityData::playing("Waiting for Advent of Code")));
+        }
+
+        // and wait till next hour
+        wait_till_next_hour_approx().await;
     }
 }
 
