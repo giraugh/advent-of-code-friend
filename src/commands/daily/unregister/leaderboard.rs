@@ -57,7 +57,6 @@ pub fn command_builder() -> CreateCommandOption {
         "leaderboard",
         "Where the daily is registered",
     )
-    .required(true)
     .add_sub_option(
         CreateCommandOption::new(
             CommandOptionType::Channel,

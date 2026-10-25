@@ -99,6 +99,7 @@ impl EventHandler for Bot {
         // When running for real, setup global commands
         #[cfg(not(test))]
         {
+            log::info!("Setting global commands");
             use serenity::all::Command;
             Command::set_global_commands(&ctx.http, commands)
                 .await
@@ -117,12 +118,14 @@ impl EventHandler for Bot {
             );
 
             // Setup guild commands
+            log::info!("Setting local commands for {guild_id:?}");
             GuildId::set_commands(guild_id, &ctx.http, commands)
                 .await
                 .expect("to have created guild commands");
         }
 
         // Start daily posting thread
+        log::info!("Starting daily-posting thread");
         let mut daily_thread = self.daily_thread.lock().await;
         let daily_thread = daily_thread.get_mut();
         let daily_thread = daily_thread.get_or_insert(tokio::spawn(daily::daily_posts(

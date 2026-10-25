@@ -56,7 +56,7 @@ pub async fn run(
 
 pub fn command_builder() -> CreateCommandOption {
     CreateCommandOption::new(
-        CommandOptionType::SubCommandGroup,
+        CommandOptionType::SubCommand,
         "puzzle",
         "Remove a daily puzzle update in a specific channel",
     )
