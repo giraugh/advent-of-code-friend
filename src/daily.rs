@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
-use chrono::{Datelike, FixedOffset, Timelike, Utc};
+use chrono::{DateTime, Datelike, FixedOffset, Timelike, Utc};
 use serenity::{
     all::{ActivityData, CreateMessage},
     prelude::Context,
@@ -16,6 +16,10 @@ use crate::{
 const EST_SECS: i32 = -5 * 60 * 60;
 pub const EST_TZ: FixedOffset = FixedOffset::east_opt(EST_SECS).unwrap();
 
+pub fn is_puzzle_day(time: &DateTime<FixedOffset>) -> bool {
+    time.month() == 12 && time.day() <= 12
+}
+
 pub async fn daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
     loop {
         // Get current time in EST
@@ -30,9 +34,9 @@ pub async fn daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
         let time = Utc::now().with_timezone(&EST_TZ);
         let year = time.year() as usize;
 
-        // Is it not december yet?
-        if time.month() != 12 {
-            log::info!("Not December, skipping daily posts");
+        // Is it an AOC puzzle ay?
+        if !is_puzzle_day(&time) {
+            log::info!("Not a puzzle day, skipping daily posts");
 
             // Set our activity
             ctx.set_activity(Some(ActivityData::playing("Waiting for Advent of Code")));
@@ -50,8 +54,7 @@ pub async fn daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
 
         // Set our activity
         ctx.set_activity(Some(ActivityData::playing(format!(
-            "Advent of Code Day {}",
-            day
+            "Advent of Code Day {day}",
         ))));
 
         // Get config
