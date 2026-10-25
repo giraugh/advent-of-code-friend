@@ -2,7 +2,7 @@ mod aoc;
 mod bot;
 mod commands;
 mod config;
-mod daily;
+mod daily_posting;
 mod format;
 
 use bot::Bot;

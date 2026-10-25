@@ -11,7 +11,7 @@ use crate::{
     aoc::{AOCData, LeaderboardCacheEntry},
     commands,
     config::Config,
-    daily,
+    daily_posting,
 };
 
 pub struct Bot {
@@ -128,10 +128,9 @@ impl EventHandler for Bot {
         log::info!("Starting daily-posting thread");
         let mut daily_thread = self.daily_thread.lock().await;
         let daily_thread = daily_thread.get_mut();
-        let daily_thread = daily_thread.get_or_insert(tokio::spawn(daily::daily_posts(
-            self.aoc_data.clone(),
-            ctx.clone(),
-        )));
+        let daily_thread = daily_thread.get_or_insert(tokio::spawn(
+            daily_posting::make_daily_posts(self.aoc_data.clone(), ctx.clone()),
+        ));
         daily_thread.await.unwrap();
     }
 }

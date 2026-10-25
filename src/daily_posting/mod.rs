@@ -1,6 +1,8 @@
-use std::{collections::HashMap, sync::Arc, time::Duration};
+pub mod timing;
 
-use chrono::{DateTime, Datelike, FixedOffset, Timelike, Utc};
+use std::{collections::HashMap, sync::Arc};
+
+use chrono::{Datelike, Timelike};
 use serenity::{
     all::{ActivityData, CreateMessage},
     prelude::Context,
@@ -10,31 +12,15 @@ use tokio::{join, sync::Mutex};
 use crate::{
     aoc::AOCData,
     config::Config,
+    daily_posting::timing::{is_puzzle_day, wait_till_next_hour_approx},
     format::{make_leaderboard_embed, make_puzzle_embed},
 };
 
-const EST_SECS: i32 = -5 * 60 * 60;
-pub const EST_TZ: FixedOffset = FixedOffset::east_opt(EST_SECS).unwrap();
-
-pub fn is_puzzle_day(time: &DateTime<FixedOffset>) -> bool {
-    time.month() == 12 && time.day() <= 12
-}
-
-pub async fn daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
+pub async fn make_daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
     loop {
-        // Get current time in EST
-        let time = Utc::now().with_timezone(&EST_TZ);
+        let time = wait_till_next_hour_approx().await;
 
-        // Wait until the hour
-        let mins_until_hour = 60 - time.minute() as u64;
-        log::info!("Waiting for {mins_until_hour} mins until next hour...");
-        tokio::time::sleep(Duration::from_secs(60 * mins_until_hour)).await;
-
-        // Get the current time after waiting
-        let time = Utc::now().with_timezone(&EST_TZ);
-        let year = time.year() as usize;
-
-        // Is it an AOC puzzle ay?
+        // Is it an AOC puzzle day?
         if !is_puzzle_day(&time) {
             log::info!("Not a puzzle day, skipping daily posts");
 
@@ -45,6 +31,7 @@ pub async fn daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
             continue;
         }
 
+        let year = time.year() as usize;
         let day = time.day() as usize;
         let hour = time.hour() as usize;
         log::info!(
@@ -54,16 +41,17 @@ pub async fn daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
 
         // Set our activity
         ctx.set_activity(Some(ActivityData::playing(format!(
-            "Advent of Code Day {day}",
+            "Advent of Code {year} - Day {day}",
         ))));
 
         // Get config
         let config = Config::get().expect("Failed to get config");
 
         // Post embeds
-        let lb_task = post_daily_leaderboards(&ctx, &config, year, hour, aoc_data.clone());
-        let pz_task = post_daily_puzzles(&ctx, &config, year, day, hour, aoc_data.clone());
-        join!(lb_task, pz_task);
+        join!(
+            post_daily_leaderboards(&ctx, &config, year, hour, aoc_data.clone()),
+            post_daily_puzzles(&ctx, &config, year, day, hour, aoc_data.clone()),
+        );
     }
 }
 
