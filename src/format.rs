@@ -1,7 +1,7 @@
 use std::fmt::Write;
 use std::sync::Arc;
 
-use serenity::builder::CreateEmbed;
+use serenity::all::{CreateEmbed, CreateEmbedFooter, Timestamp};
 
 use crate::{
     aoc::{Leaderboard, LeaderboardCacheEntry, PuzzleDetails},
@@ -33,13 +33,22 @@ pub fn make_leaderboard_embed(
             &leaderboard.leaderboard,
             ordering,
         ))
-        .timestamp(leaderboard.created_at.to_rfc3339())
+        .timestamp(
+            leaderboard
+                .created_at
+                .to_rfc3339()
+                .parse::<Timestamp>()
+                .unwrap(),
+        )
         .url(generate_leaderboard_url(
             &leaderboard.leaderboard.event,
             &leaderboard.leaderboard_id,
         ))
         .color(EMBED_COLOR)
-        .footer(|f| f.text(format!("Year {}", leaderboard.leaderboard.event)))
+        .footer(CreateEmbedFooter::new(format!(
+            "Year {}",
+            leaderboard.leaderboard.event
+        )))
         .to_owned()
 }
 

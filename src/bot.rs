@@ -1,9 +1,10 @@
 use serenity::{
+    all::{CreateCommand, Interaction},
     async_trait,
-    model::{gateway::Ready, id::GuildId, prelude::interaction::Interaction},
+    model::{gateway::Ready, id::GuildId},
     prelude::*,
 };
-use std::{cell::RefCell, env, sync::Arc};
+use std::{cell::RefCell, sync::Arc};
 use tokio::task::JoinHandle;
 
 use crate::{
@@ -67,7 +68,7 @@ impl Bot {
 impl EventHandler for Bot {
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         // If this interaction is a command
-        if let Interaction::ApplicationCommand(command) = interaction {
+        if let Interaction::Command(command) = interaction {
             match command.data.name.as_str() {
                 "register" => commands::register::run(self, &ctx, &command).await,
                 "unregister" => commands::unregister::run(self, &ctx, &command).await,
@@ -82,35 +83,49 @@ impl EventHandler for Bot {
     }
 
     async fn ready(&self, ctx: Context, ready: Ready) {
-        log::info!(
-            "Bot is connected as {}#{}",
-            ready.user.name,
-            ready.user.discriminator
-        );
+        log::info!("Bot is connected as {}", ready.user.display_name(),);
 
-        // For now, we will register local commands, to do so get the guild id
-        let guild_id = GuildId(
-            env::var("GUILD_ID")
-                .expect("Expected GUILD_ID in environment")
-                .parse()
-                .expect("GUILD_ID must be an integer"),
-        );
+        // Define all commands
+        let commands: Vec<CreateCommand> = vec![
+            commands::register::command_builder(),
+            commands::unregister::command_builder(),
+            commands::status::command_builder(),
+            commands::puzzle::command_builder(),
+            commands::help::command_builder(),
+            commands::leaderboard::command_builder(),
+            commands::daily::command_builder(),
+        ];
 
-        // Setup guild commands
-        GuildId::set_application_commands(&guild_id, &ctx.http, |commmands| {
-            commmands
-                .create_application_command(commands::register::register)
-                .create_application_command(commands::unregister::register)
-                .create_application_command(commands::leaderboard::register)
-                .create_application_command(commands::puzzle::register)
-                .create_application_command(commands::daily::register)
-                .create_application_command(commands::status::register)
-                .create_application_command(commands::help::register)
-        })
-        .await
-        .expect("to have created guild commands");
+        // When running for real, setup global commands
+        #[cfg(not(test))]
+        {
+            log::info!("Setting global commands");
+            use serenity::all::Command;
+            Command::set_global_commands(&ctx.http, commands)
+                .await
+                .expect("To succesfully set global commands");
+        }
+
+        // In test, just register the commands in a specified guild
+        #[cfg(test)]
+        {
+            use std::env;
+            let guild_id = GuildId::new(
+                env::var("GUILD_ID")
+                    .expect("Expected GUILD_ID in environment")
+                    .parse()
+                    .expect("GUILD_ID must be an integer"),
+            );
+
+            // Setup guild commands
+            log::info!("Setting local commands for {guild_id:?}");
+            GuildId::set_commands(guild_id, &ctx.http, commands)
+                .await
+                .expect("to have created guild commands");
+        }
 
         // Start daily posting thread
+        log::info!("Starting daily-posting thread");
         let mut daily_thread = self.daily_thread.lock().await;
         let daily_thread = daily_thread.get_mut();
         let daily_thread = daily_thread.get_or_insert(tokio::spawn(daily::daily_posts(

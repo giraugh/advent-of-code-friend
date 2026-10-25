@@ -1,9 +1,5 @@
 use serenity::{
-    builder::CreateApplicationCommandOption,
-    model::prelude::{
-        command::CommandOptionType,
-        interaction::application_command::{ApplicationCommandInteraction, CommandDataOption},
-    },
+    all::{CommandDataOption, CommandInteraction, CommandOptionType, CreateCommandOption},
     prelude::Context,
 };
 
@@ -17,25 +13,25 @@ mod puzzle;
 pub async fn run(
     bot: &Bot,
     ctx: &Context,
-    interaction: &ApplicationCommandInteraction,
-    command: &CommandDataOption,
+    interaction: &CommandInteraction,
+    options: &[CommandDataOption],
 ) {
-    match extract_subcommand(&command.options) {
-        Some(subcommand) => match subcommand.name.as_str() {
-            "leaderboard" => leaderboard::run(bot, ctx, interaction, subcommand).await,
-            "puzzle" => puzzle::run(bot, ctx, interaction, subcommand).await,
+    match extract_subcommand(options) {
+        Some((subcommand, options)) => match subcommand.as_str() {
+            "leaderboard" => leaderboard::run(bot, ctx, interaction, &options).await,
+            "puzzle" => puzzle::run(bot, ctx, interaction, &options).await,
             _ => panic!("Unknown subcommand"),
         },
         None => panic!("Command group called without subcommand"),
     }
 }
 
-pub fn register() -> CreateApplicationCommandOption {
-    CreateApplicationCommandOption::default()
-        .name("unregister")
-        .description("Remove a daily update from a specific channel")
-        .kind(CommandOptionType::SubCommandGroup)
-        .add_sub_option(leaderboard::register())
-        .add_sub_option(puzzle::register())
-        .to_owned()
+pub fn command_builder() -> CreateCommandOption {
+    CreateCommandOption::new(
+        CommandOptionType::SubCommandGroup,
+        "unregister",
+        "Remove a daily update from a specific channel",
+    )
+    .add_sub_option(leaderboard::command_builder())
+    .add_sub_option(puzzle::command_builder())
 }

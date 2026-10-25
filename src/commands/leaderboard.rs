@@ -1,12 +1,12 @@
 use crate::bot::Bot;
+use crate::commands::make_error_response;
 use crate::config::LeaderboardOrdering;
 use crate::format::{make_leaderboard_embed, make_message_embed, ResponseReason};
 
 use chrono::{Datelike, Utc};
-use serenity::builder::CreateApplicationCommand;
-use serenity::model::prelude::command::CommandOptionType;
-use serenity::model::prelude::interaction::application_command::{
-    ApplicationCommandInteraction, CommandDataOption,
+use serenity::all::{
+    CommandDataOption, CommandInteraction, CommandOptionType, CreateCommand, CreateCommandOption,
+    CreateInteractionResponseFollowup,
 };
 use serenity::prelude::Context;
 
@@ -34,20 +34,16 @@ impl CommandOptions for LeaderboardCommandOptions {
 
 // Command //
 
-pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteraction) {
+pub async fn run(bot: &Bot, ctx: &Context, command: &CommandInteraction) {
     // Parse command options
     let options = LeaderboardCommandOptions::from_options_list(&command.data.options);
 
     if options.year > Utc::now().year() {
         command
-            .create_interaction_response(&ctx.http, |response| {
-                response.interaction_response_data(|message| {
-                    message.ephemeral(true).add_embed(make_message_embed(
-                        ResponseReason::Error,
-                        "You can't use a year in the future 🗞️",
-                    ))
-                })
-            })
+            .create_response(
+                &ctx.http,
+                make_error_response("You can't use a year in the future 🗞️"),
+            )
             .await
             .expect("failed to create interaction response");
         return;
@@ -66,48 +62,44 @@ pub async fn run(bot: &Bot, ctx: &Context, command: &ApplicationCommandInteracti
         Ok(leaderboard) => {
             // Respond
             command
-                .create_followup_message(&ctx.http, |message| {
-                    message.add_embed(make_leaderboard_embed(leaderboard, options.ordering))
-                })
+                .create_followup(
+                    &ctx.http,
+                    CreateInteractionResponseFollowup::new()
+                        .add_embed(make_leaderboard_embed(leaderboard, options.ordering)),
+                )
                 .await
-                .expect("failed to create interaction response");
+                .expect("failed to create followup");
         }
 
         // If something went wrong...
         Err(error) => {
-            command
-                .create_followup_message(&ctx.http, |message| {
-                    message.add_embed(make_message_embed(
-                        ResponseReason::Error,
-                        &format!("Failed to get leaderboard: {}\n\nYour session token may have expired. Please try rerunning `/register` with a fresh token.", error),
-                    ))
-                })
-                .await
-                .expect("failed to send error response");
+            command.create_followup(&ctx.http, CreateInteractionResponseFollowup::new()
+                .add_embed(make_message_embed(ResponseReason::Error,
+                &format!("Failed to get leaderboard: {}\n\nYour session token may have expired. Please try rerunning `/register` with a fresh token.", error),
+            ))).await.expect("failed to send error followup");
         }
     }
 }
 
-pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
-    command
-        .name("leaderboard")
-        .description("Uses the registered leaderboard ID to fetch and post the leaderboard.")
-        .create_option(|option| {
-            option
-                .name("ordering")
-                .description(
-                    "Method used to order people in the leaderboard (default: local-score)",
-                )
-                .kind(CommandOptionType::String)
-                .add_string_choice("local-score", LeaderboardOrdering::LocalScore)
-                .add_string_choice("global-score", LeaderboardOrdering::GlobalScore)
-                .add_string_choice("stars", LeaderboardOrdering::Stars)
-        })
-        .create_option(|option| {
-            option
-                .name("year")
-                .description("Year to fetch leaderboard for (default: current year)")
-                .kind(CommandOptionType::Integer)
-                .min_int_value(2015)
-        })
+pub fn command_builder() -> CreateCommand {
+    CreateCommand::new("leaderboard")
+        .description("Uses the registered leaderboard ID to fetch and post the leaderboard")
+        .add_option(
+            CreateCommandOption::new(
+                CommandOptionType::String,
+                "ordering",
+                "Method used to order people in the leaderboard (default: local-score",
+            )
+            .add_string_choice("local-score", LeaderboardOrdering::LocalScore)
+            .add_string_choice("global-score", LeaderboardOrdering::GlobalScore)
+            .add_string_choice("stars", LeaderboardOrdering::Stars),
+        )
+        .add_option(
+            CreateCommandOption::new(
+                CommandOptionType::Integer,
+                "year",
+                "Year to fetch leaderboard for (default: current-year)",
+            )
+            .min_int_value(2015),
+        )
 }
