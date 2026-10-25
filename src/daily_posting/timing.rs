@@ -1,36 +1,33 @@
 use std::time::Duration;
 
-use chrono::{DateTime, Datelike, FixedOffset, Timelike, Utc};
+use chrono::{DateTime, Datelike, FixedOffset, Timelike};
 
-// AoC uses EST timezone for puzzle releases
-const EST_SECS: i32 = -5 * 60 * 60;
-pub const EST_TZ: FixedOffset = FixedOffset::east_opt(EST_SECS).unwrap();
+use crate::daily_posting::clock::Clock;
 
 /// How many puzzles are in AoC
 /// this used to be 24 but is now just 12
 const NUM_PUZZLE_DAYS: u32 = 12;
 
+pub mod clock {}
+
 pub fn is_puzzle_day(time: &DateTime<FixedOffset>) -> bool {
     time.month() == 12 && time.day() <= NUM_PUZZLE_DAYS
 }
 
-pub fn now_etc() -> DateTime<FixedOffset> {
-    Utc::now().with_timezone(&EST_TZ)
-}
-
-pub async fn wait_till_next_hour_approx() {
+pub async fn wait_till_next_hour_approx<C: Clock>(clock: &mut C) {
     // Get current time in EST
-    let time = now_etc();
+    let time = clock.now_etc();
 
     // Wait until the hour
     let mins_until_hour = 60 - time.minute() as u64;
     log::info!("Waiting for {mins_until_hour} mins until next hour...");
-    tokio::time::sleep(Duration::from_secs(60 * mins_until_hour)).await;
+    clock.sleep(Duration::from_secs(60 * mins_until_hour)).await;
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::daily_posting::clock::{FakeClock, EST_TZ};
     use chrono::TimeZone;
 
     macro_rules! date {
@@ -54,9 +51,10 @@ mod test {
         }
     }
 
-    // TODO: harder to test...
-    #[test]
-    fn test_wait_till_next_hour() {
-        // TODO
+    #[tokio::test]
+    async fn test_wait_till_next_hour() {
+        let mut clock = FakeClock::new(date!(2022, 11, 30, 23, 00, 00));
+        wait_till_next_hour_approx(&mut clock).await;
+        assert_eq!(clock.day(), 1);
     }
 }

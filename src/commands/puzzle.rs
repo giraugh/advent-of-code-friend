@@ -6,7 +6,7 @@ use serenity::all::{
 use serenity::prelude::Context;
 
 use crate::bot::Bot;
-use crate::daily_posting::timing::now_etc;
+use crate::daily_posting::clock::{Clock, SystemClock};
 use crate::format::{make_message_embed, make_puzzle_embed, ResponseReason};
 
 use super::{extract_int_option, CommandOptions};
@@ -33,7 +33,8 @@ pub async fn run(bot: &Bot, ctx: &Context, command: &CommandInteraction) {
     let options = PuzzleCommandOptions::from_options_list(&command.data.options);
 
     // Get current year
-    let time = now_etc();
+    let clock = SystemClock {};
+    let time = clock.now_etc();
     let year = time.year() as usize;
     let day = time.day() as usize;
 

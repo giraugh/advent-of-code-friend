@@ -1,3 +1,4 @@
+pub mod clock;
 pub mod timing;
 
 use std::{collections::HashMap, sync::Arc};
@@ -12,13 +13,18 @@ use tokio::{join, sync::Mutex};
 use crate::{
     aoc::AOCData,
     config::Config,
-    daily_posting::timing::{is_puzzle_day, now_etc, wait_till_next_hour_approx},
+    daily_posting::{
+        clock::{Clock, SystemClock},
+        timing::{is_puzzle_day, wait_till_next_hour_approx},
+    },
     format::{make_leaderboard_embed, make_puzzle_embed},
 };
 
 pub async fn make_daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
+    let mut clock = SystemClock {};
+
     loop {
-        let time = now_etc();
+        let time = clock.now_etc();
         let year = time.year() as usize;
         let day = time.day() as usize;
         let hour = time.hour() as usize;
@@ -51,7 +57,7 @@ pub async fn make_daily_posts(aoc_data: Arc<Mutex<AOCData>>, ctx: Context) {
         }
 
         // and wait till next hour
-        wait_till_next_hour_approx().await;
+        wait_till_next_hour_approx(&mut clock).await;
     }
 }
 
