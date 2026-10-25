@@ -36,9 +36,8 @@ impl AOCData {
             Some(puzzle) => Ok(puzzle.clone()),
             _ => {
                 let puzzle_details = fetch_puzzle_details(&self.http_client, year, day).await;
-                puzzle_details.map(|pd| {
+                puzzle_details.inspect(|pd| {
                     self.puzzles.insert(key, pd.clone());
-                    pd
                 })
             }
         }
