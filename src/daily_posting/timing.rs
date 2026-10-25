@@ -8,8 +8,6 @@ use crate::daily_posting::clock::Clock;
 /// this used to be 24 but is now just 12
 const NUM_PUZZLE_DAYS: u32 = 12;
 
-pub mod clock {}
-
 pub fn is_puzzle_day(time: &DateTime<FixedOffset>) -> bool {
     time.month() == 12 && time.day() <= NUM_PUZZLE_DAYS
 }
